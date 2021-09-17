@@ -15,6 +15,7 @@
 #include <iostream>
 #include <vector>
 
+//Use global hModule variable to pass to the Quit() function
 HMODULE globalhModule;
 
 int WINAPI MySend(SOCKET s, const char* buf, int len, int flags);
@@ -49,6 +50,7 @@ bool logRecvHook = false;
 uintptr_t moduleBase;
 std::vector<char> logText;
 
+//Post a quit message to the windows and close the DLL thread
 void Quit() {
     PostQuitMessage(0);
     FreeLibraryAndExitThread(globalhModule, 0);
@@ -223,8 +225,8 @@ DWORD WINAPI WindowThread(HMODULE hModule) {
     HWND hClearButton;
 
     RegisterDLLWindowClass(L"InjectedDLLWindowClass");
-    HWND hwnd = CreateWindowEx(0, L"InjectedDLLWindowClass", L"Erarnitox's Tera Proxy | GuidedHacking.com", WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 1020, 885, NULL, hMenu, inj_hModule, NULL);
-    hLog = CreateWindowEx(0, L"edit", L"Tera Proxy made by Erarnitox\r\n!!! visit GuidedHacking.com !!!", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | WS_BORDER | ES_READONLY, 5, 5, 1005, 700, hwnd, NULL, hModule, NULL);
+    HWND hwnd = CreateWindowEx(0, L"InjectedDLLWindowClass", L"Erarnitox's MMO Proxy | GuidedHacking.com", WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 1020, 885, NULL, hMenu, inj_hModule, NULL);
+    hLog = CreateWindowEx(0, L"edit", L"MMO Proxy made by Erarnitox\r\n!!! visit GuidedHacking.com !!!", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | WS_BORDER | ES_READONLY, 5, 5, 1005, 700, hwnd, NULL, hModule, NULL);
 
     hClearButton = CreateWindowEx(0, L"button", L"Clear Log", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 710, 100, 30, hwnd, (HMENU)CLEAR_BUTTON, hModule, NULL);
     hSendButton = CreateWindowEx(0, L"button", L"Send", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 800, 100, 30, hwnd, (HMENU)SEND_BUTTON, hModule, NULL);
