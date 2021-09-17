@@ -24,6 +24,7 @@
     <ProjectGuid>{126598e6-059d-4b38-956f-d12aa1a5f97c}</ProjectGuid>
     <RootNamespace>ranchalogger</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>daoc-logger</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
