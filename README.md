@@ -10,3 +10,15 @@ This is a work in progress.  Currently just have a skeleton built that is using 
 It captures packets that match the packets seen in Wireshark, which from what I have read about DAOC means those packets are encrypted inside of game.dll before being sent to the send function
 
 Still working on trying to reverse that part
+
+Action shot of send logging:
+
+![Send Log](https://github.com/towbes/daoc-logger/blob/main/images/sendlogging.JPG?raw=true)
+
+The Hook on ws2_32.send:
+
+![send hook](https://github.com/towbes/daoc-logger/blob/main/images/ws2_32sendjump.JPG?raw=true)
+
+And the mysend function in memory:
+
+![Send Log](https://github.com/towbes/daoc-logger/blob/main/images/mysend.JPG?raw=true)
