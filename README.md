@@ -13,12 +13,12 @@ Still working on trying to reverse that part
 
 Action shot of send logging:
 
-![Send Log](https://github.com/towbes/daoc-logger/blob/main/Images/sendlogging.JPG?raw=true)
+![Send Log](https://github.com/towbes/daoc-logger/blob/master/Images/sendlogging.JPG?raw=true)
 
 The Hook on ws2_32.send:
 
-![send hook](https://github.com/towbes/daoc-logger/blob/main/Images/ws2_32sendjump.JPG?raw=true)
+![send hook](https://github.com/towbes/daoc-logger/blob/master/Images/ws2_32sendjump.JPG?raw=true)
 
 And the mysend function in memory:
 
-![Send Log](https://github.com/towbes/daoc-logger/blob/main/Images/mysend.JPG?raw=true)
+![Send Log](https://github.com/towbes/daoc-logger/blob/master/Images/mysend.JPG?raw=true)
