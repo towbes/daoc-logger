@@ -11,6 +11,7 @@
 #define LOG_SEND (WM_APP + 102)
 #define LOG_RECV (WM_APP + 103)
 #define CLEAR_BUTTON (WM_APP + 104)
+#define READSLOT_BUTTON (WM_APP + 105)
 
 HMODULE inj_hModule;
 HWND hCraftedPacket;
@@ -137,6 +138,10 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             }
             break;
 
+        case READSLOT_BUTTON:
+            //int slotNum = 40;
+            readSlot(79);
+            break;
         case CLEAR_BUTTON:
             logText.erase(logText.begin(), logText.end());
             SetWindowTextA(hLog, "Cleared! :)\r\nFind Tutorials on Guidedhacking.com!");
@@ -261,6 +266,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     HMENU hMenu = CreateDLLWindowMenu();
     HWND hSendButton;
     HWND hClearButton;
+    HWND hReadButton;
     
     RegisterDLLWindowClass(L"InjectedDLLWindowClass");
     HWND hwnd = CreateWindowEx(0, L"InjectedDLLWindowClass", L"Erarnitox's Tera Proxy | GuidedHacking.com", WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 1020, 885, NULL, hMenu, inj_hModule, NULL);
@@ -268,6 +274,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
     hClearButton = CreateWindowEx(0, L"button", L"Clear Log", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 710, 100, 30, hwnd, (HMENU)CLEAR_BUTTON, hModule, NULL);
     hSendButton = CreateWindowEx(0, L"button", L"Send", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 800, 100, 30, hwnd, (HMENU)SEND_BUTTON, hModule, NULL);
+    hReadButton = CreateWindowEx(0, L"button", L"Read Slot", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 740, 100, 30, hwnd, (HMENU)READSLOT_BUTTON, hModule, NULL);
     hCraftedPacket = CreateWindowEx(0, L"edit", L"<Packet Data>", WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_BORDER, 110, 730, 900, 100, hwnd, NULL, hModule, NULL);
 
     hLogSend = CreateWindowEx(0, L"button", L"Log Send", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 110, 705, 100, 25, hwnd, (HMENU)LOG_SEND, hModule, NULL);

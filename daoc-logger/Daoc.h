@@ -127,3 +127,29 @@ void __declspec(naked) recvHookFunc() {
         jmp[jmpBackAddrRecv]
     }
 }
+
+//inventory
+struct item_t {
+    int itemId;
+    char unknown[72];
+    char itemName[80];
+    char unknown2[312];
+};
+
+
+void readSlot(int slotNum)
+{
+    
+    size_t offset = (slotNum - 40) * sizeof(item_t);
+    uintptr_t* ValLoc = (uintptr_t*)(0xf9b8d0 + offset);
+
+    item_t slot40 = (item_t&)*ValLoc;
+
+    printf("Slot40loc - %p, ItemHex: %02x, ItemId - %u, ItemName - %s\n", ValLoc, slot40.itemId, slot40.itemId, slot40.itemName);
+    
+    /*
+    uintptr_t* ValLoc2 = (uintptr_t*)(0xf9b8d0 + sizeof(item_t));
+    item_t slot41 = (item_t&)*ValLoc2;
+    printf("Slot41loc - %p, ItemHex: %02x, ItemId - %u, ItemName - %s\n", ValLoc2, slot41.itemId, slot41.itemId, slot41.itemName);
+    */
+}
