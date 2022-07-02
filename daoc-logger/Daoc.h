@@ -17,6 +17,8 @@ unsigned char* recvBuffer;
 unsigned char* tmpBuffer;
 
 uintptr_t moduleBase;
+
+//Used for pointer to the recv buffer
 uintptr_t receiveBuffer;
 
 //const char* internalSendPattern = "\x55\x8B\xEC\x53\x8B\xD9\x83\x7B\x0C\x00\x74\x54\x8B\x8B\x1C\x00\x02\x00\x85\xC9\x74\x2E\x8B\x01\x8B\x01\x8B\x40\x18\xFF\xD0";
@@ -60,42 +62,8 @@ int m_readItemId(int slotNum);
 
 void m_cleanInventory();
 
-//DWORD jmpBackAddrSend;
-//void __declspec(naked) sendHookFunc() {
-//    __asm {
-//        mov thisPTR, ecx
-//        mov teax, eax; backup
-//        mov tebx, ebx
-//        mov tecx, ecx
-//        mov tedx, edx
-//        mov tesi, esi
-//        mov tedi, edi
-//        mov tebp, ebp
-//        mov tesp, esp
-//        mov eax, [esp + 0x8]
-//        mov sentBuffer, eax
-//        mov eax, [esp + 0xC]
-//        mov sentLen, eax
-//    }
-//    if (logSentHook) {
-//        printSendBufferToLog();
-//    }
-//    __asm{
-//        mov eax, teax
-//        mov ebx, tebx
-//        mov ecx, tecx
-//        mov edx, tedx
-//        mov esi, tesi
-//        mov edi, tedi
-//        mov ebp, tebp
-//        mov esp, tesp; end of restore
-//        mov ebp, esp
-//        push ebx
-//        mov ebx, ecx
-//        jmp[jmpBackAddrSend]
-//    }
-//}
 
+//https://docs.microsoft.com/en-us/cpp/assembler/inline/emit-pseudoinstruction?view=msvc-170
 #define mv_ax __asm _emit 0x66 __asm _emit 0xA1 __asm _emit 0xB8 __asm _emit 0x77 __asm _emit 0x04 __asm _emit 0x01
 
 DWORD jmpBackAddrRecv;
@@ -157,10 +125,13 @@ recvBuffer[32] = Start of string for item name
 
 std::set<int> badItemIdList{ 
     13474,	//Item Name - Ancient Troll Blood
+    13462,  //Item name - Enriched quicksilver
+    13485,  //Item name - Ancient necrotic brain fluid
     13466,	//Item Name - Ancient Mirror
     13470,	//Item Name - Ancient Pure Mercury
     13483,	//Item Name - Ancient Lich Tooth
     13478,	//Item Name - Ancient Giant Blood
+    13482,  //ItemName - Ancient Crushed Focus Stone
     59060,	//Item Name - Perfected Armor Pattern
     6267,	//Item Name - uminescent Exeregum Stone
     6266,	//Item Name - Luminescent Exerpise Stone
@@ -200,6 +171,13 @@ std::set<int> badItemIdList{
     63674,	//Item Name - Ageless Fluted Protector
     63669,	//Item Name - Ring of Arcane Strength
     63665,	//Item Name - Diamond Spiked Vest
+    63668,  //Item Name - Dragonflame Protecto
+    63676,  //Item Name - Ensorcelled Robes of Severit
+    12173,  //Item Name - Band of Eldsp
+    22391,  //Item Name - Staff of the Lifeblinde
+    12174,  //ItemName - Belt of Granite Enhancement
+    12180,  //ItemName - Stonewatch Bracer
+    12172,  //ItemName - Stonewatch Pin
 };
 
 std::set<int> goodItemIdList{ };
