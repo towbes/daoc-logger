@@ -4,6 +4,7 @@
 #include "Daoc.h"
 #include "Hook.h"
 #include "Scan.h"
+#include <algorithm>
 #include <vector>
 
 #define MYMENU_EXIT (WM_APP + 100)
@@ -11,7 +12,8 @@
 #define LOG_SEND (WM_APP + 102)
 #define LOG_RECV (WM_APP + 103)
 #define CLEAR_BUTTON (WM_APP + 104)
-#define READSLOT_BUTTON (WM_APP + 105)
+#define FILTER_ITEMS (WM_APP + 105)
+#define CLEANITEM_BUTTON (WM_APP + 106)
 
 HMODULE inj_hModule;
 HWND hCraftedPacket;
@@ -28,7 +30,7 @@ char bufferToSend[533];
 char appedToLog[533];
 char const hex_chars[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
-uintptr_t moduleBase;
+//uintptr_t moduleBase;
 std::vector<char> logText;
 
 HMENU CreateDLLWindowMenu(){
@@ -138,10 +140,24 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             }
             break;
 
-        case READSLOT_BUTTON:
-            //int slotNum = 40;
-            readSlot(79);
+        case FILTER_ITEMS:
+            LogRecv = IsDlgButtonChecked(hWindow, FILTER_ITEMS);
+#ifdef _DEBUG
+            std::cout << "Filtering items " << ((LogRecv != BST_CHECKED) ? "enabled" : "disabled") << std::endl;
+#endif
+            if (LogRecv == BST_CHECKED) {
+                CheckDlgButton(hWindow, FILTER_ITEMS, BST_UNCHECKED);
+                filterItemFlag = false;
+            }
+            else {
+                CheckDlgButton(hWindow, FILTER_ITEMS, BST_CHECKED);
+                filterItemFlag = true;
+            }
             break;
+        case CLEANITEM_BUTTON:
+            m_cleanInventory();
+            break;
+
         case CLEAR_BUTTON:
             logText.erase(logText.begin(), logText.end());
             SetWindowTextA(hLog, "Cleared! :)\r\nFind Tutorials on Guidedhacking.com!");
@@ -266,19 +282,23 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     HMENU hMenu = CreateDLLWindowMenu();
     HWND hSendButton;
     HWND hClearButton;
-    HWND hReadButton;
+    HWND hFilterItems;
+    HWND hCleanItemButton;
     
     RegisterDLLWindowClass(L"InjectedDLLWindowClass");
     HWND hwnd = CreateWindowEx(0, L"InjectedDLLWindowClass", L"Erarnitox's Tera Proxy | GuidedHacking.com", WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 1020, 885, NULL, hMenu, inj_hModule, NULL);
     hLog = CreateWindowEx(0, L"edit", L"Tera Proxy made by Erarnitox\r\n!!! visit GuidedHacking.com !!!", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | WS_BORDER | ES_READONLY, 5, 5, 1005, 700, hwnd, NULL, hModule, NULL);
 
     hClearButton = CreateWindowEx(0, L"button", L"Clear Log", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 710, 100, 30, hwnd, (HMENU)CLEAR_BUTTON, hModule, NULL);
+    hCleanItemButton = CreateWindowEx(0, L"button", L"Clean Items", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 750, 100, 30, hwnd, (HMENU)CLEANITEM_BUTTON, hModule, NULL);
     hSendButton = CreateWindowEx(0, L"button", L"Send", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 800, 100, 30, hwnd, (HMENU)SEND_BUTTON, hModule, NULL);
-    hReadButton = CreateWindowEx(0, L"button", L"Read Slot", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 740, 100, 30, hwnd, (HMENU)READSLOT_BUTTON, hModule, NULL);
+    
     hCraftedPacket = CreateWindowEx(0, L"edit", L"<Packet Data>", WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_BORDER, 110, 730, 900, 100, hwnd, NULL, hModule, NULL);
 
+    
     hLogSend = CreateWindowEx(0, L"button", L"Log Send", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 110, 705, 100, 25, hwnd, (HMENU)LOG_SEND, hModule, NULL);
     hLogRecv = CreateWindowEx(0, L"button", L"Log Recv", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 210, 705, 100, 25, hwnd, (HMENU)LOG_RECV, hModule, NULL);
+    hFilterItems = CreateWindowEx(0, L"button", L"Filter Items", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 310, 705, 100, 25, hwnd, (HMENU)FILTER_ITEMS, hModule, NULL);
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd); // redraw window;
