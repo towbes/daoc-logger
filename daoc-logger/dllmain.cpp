@@ -108,22 +108,22 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
 //            std::cout << "Packet Lengh: " << i << std::endl;
 //#endif
 //            if (thisPTR != 0) {
-//                Send(thisPTR, bufferToSend, i);
+//                toHookSend(thisPTR, bufferToSend, i);
 //            }
 //            
 //            break;
-//        case LOG_SEND:
-//            LogSend = IsDlgButtonChecked(hWindow, LOG_SEND);
-//            
-//            if (LogSend == BST_CHECKED) {
-//                CheckDlgButton(hWindow, LOG_SEND, BST_UNCHECKED);
-//                logSentHook = false;
-//            }
-//            else {
-//                CheckDlgButton(hWindow, LOG_SEND, BST_CHECKED);
-//                logSentHook = true;
-//            }
-//            break;
+        case LOG_SEND:
+            LogSend = IsDlgButtonChecked(hWindow, LOG_SEND);
+            
+            if (LogSend == BST_CHECKED) {
+                CheckDlgButton(hWindow, LOG_SEND, BST_UNCHECKED);
+                logSentHook = false;
+            }
+            else {
+                CheckDlgButton(hWindow, LOG_SEND, BST_CHECKED);
+                logSentHook = true;
+            }
+            break;
 
         case LOG_RECV:
             LogRecv = IsDlgButtonChecked(hWindow, LOG_RECV);
@@ -186,33 +186,41 @@ BOOL RegisterDLLWindowClass(const wchar_t szClassName[]) {
     return 1;
 }
 
-//inline void printSendBufferToLog() {
-//    char sendID[] = "[SEND] ";
-//#ifdef _DEBUG
-//    std::cout << "Sent Packet len: " << std::dec << sentLen << std::endl;
-//#endif
-//    while (logText.size() > 4096) {
-//        logText.erase(logText.begin(), logText.begin() + 400);
-//    }
-//    if (logText.size() > 1) {
-//        logText.pop_back();
-//        logText.push_back('\r');
-//        logText.push_back('\n');
-//    }
-//    
-//    for (DWORD i = 0; i < sentLen + 7; ++i) {
-//        if (i < 7) {
-//            logText.push_back(sendID[i]);
-//        }
-//        else {
-//            logText.push_back(hex_chars[((sentBuffer)[i - 7] & 0xF0) >> 4]);
-//            logText.push_back(hex_chars[((sentBuffer)[i - 7] & 0x0F) >> 0]);
-//            logText.push_back(' ');
-//        }
-//    }
-//    logText.push_back('\0');
-//    SetWindowTextA(hLog, &logText[0]);
-//}
+inline void printSendBufferToLog() {
+    char sendID[] = "[SEND] ";
+    char packHeader = (char)packetHeader;
+#ifdef _DEBUG
+    std::cout << "Sent Packet len: " << std::dec << sentLen << std::endl;
+    std::cout << "Packet header is: " << std::hex << packetHeader << std::endl;
+#endif
+    while (logText.size() > 4096) {
+        logText.erase(logText.begin(), logText.begin() + 400);
+    }
+    if (logText.size() > 1) {
+        logText.pop_back();
+        logText.push_back('\r');
+        logText.push_back('\n');
+    }
+    //Packet header is in 
+    for (DWORD i = 0; i < sentLen + 8; ++i) {
+        if (i < 7) {
+            logText.push_back(sendID[i]);
+        }
+        //do this once
+        else if (i < 8) {
+            logText.push_back(hex_chars[((packHeader) & 0xF0) >> 4]);
+            logText.push_back(hex_chars[((packHeader) & 0x0F) >> 0]);
+            logText.push_back(' ');
+        }
+        else {
+            logText.push_back(hex_chars[((sentBuffer)[i - 8] & 0xF0) >> 4]);
+            logText.push_back(hex_chars[((sentBuffer)[i - 8] & 0x0F) >> 0]);
+            logText.push_back(' ');
+        }
+    }
+    logText.push_back('\0');
+    SetWindowTextA(hLog, &logText[0]);
+}
 
 
 //Might have to use Semapores if Recv and Send run in different threads
@@ -257,25 +265,26 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     logText = std::vector<char>();
 
     moduleBase = (uintptr_t)GetModuleHandle(moduleName);
-    //Send = (InternalSend)(ScanInternal(internalSendPattern, internalSendMask, (char*)(moduleBase+ 0x0500000), 0x3000000));
+    //Send = (InternalSend)(void*)(moduleBase + 0x281DF);//(ScanInternal(internalSendPattern, internalSendMask, (char*)(moduleBase+ 0x0500000), 0x3000000));
+    void* toHookSend = (void*)(moduleBase + 0x281DF);
     void* toHookRecv = (void*)(moduleBase+ 0x27F5E);//(ScanInternal(internalRecvPattern, internalRecvMask, (char*)(moduleBase + 0x0500000), 0x3000000));
 
+
 #ifdef _DEBUG
-    //std::cout << "send function location:" << std::hex << (int)Send << std::endl;
+    std::cout << "send function location:" << std::hex << (int)toHookSend << std::endl;
     std::cout << "module base is:" << std::hex << (int)moduleBase << std::endl;
     std::cout << "recv function location:" << std::hex << (int)toHookRecv << std::endl;
 #endif // _DEBUG
 
-    //toHookSend += (size_t)Send;
-    //jmpBackAddrSend = toHookSend + sendHookLen;
+    jmpBackAddrSend = (size_t)toHookSend + sendHookLen;
     jmpBackAddrRecv = (size_t)toHookRecv + recvHookLen;
 
 #ifdef _DEBUG
-    //std::cout << "[Send Jump Back Addy:] 0x" << std::hex << jmpBackAddrSend << std::endl;
+    std::cout << "[Send Jump Back Addy:] 0x" << std::hex << jmpBackAddrSend << std::endl;
     std::cout << "[Recv Jump Back Addy:] 0x" << std::hex << jmpBackAddrRecv << std::endl;
 #endif
 
-    //Hook* sendHook = new Hook((void*)toHookSend, (void*)sendHookFunc, sendHookLen);
+    Hook* sendHook = new Hook((void*)toHookSend, (void*)sendHookFunc, sendHookLen);
     Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
 
     MSG messages;
@@ -313,7 +322,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
     //exit:
     delete recvHook;
-    //delete sendHook;
+    delete sendHook;
     
 
 #ifdef _DEBUG

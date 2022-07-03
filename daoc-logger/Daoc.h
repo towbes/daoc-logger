@@ -1,25 +1,29 @@
 #pragma once
 #include <set>
 
-//typedef void (__thiscall* InternalSend)(void* thisClass, const char* data, DWORD length);
+//typedef void (__thiscall* InternalSend)(void* thisClass, const char* , const char* data, DWORD length);
 //InternalSend Send;
-void* thisPTR;
+//void* thisPTR;
 wchar_t moduleName[] = L"game.dll";
-//size_t sendFuncOffset = 0x1045270;
-//size_t toHookSend = 1;
-//int sendHookLen = 5;
+size_t sendFuncOffset = 0x281DF;
+
+int sendHookLen = 8;
 size_t recvFuncOffset = 0x27F5E;
 int recvHookLen = 8;
-//DWORD sentLen;
-//char* sentBuffer;
+DWORD sentLen;
+DWORD packetHeader;
+DWORD packetUnknown;
+unsigned char* sentBuffer;
 DWORD recvLen;
 unsigned char* recvBuffer;
-unsigned char* tmpBuffer;
 
 uintptr_t moduleBase;
 
 //Used for pointer to the recv buffer
 uintptr_t receiveBuffer;
+
+//Used for pointer to send buffer
+uintptr_t sentBuffPtr;
 
 //const char* internalSendPattern = "\x55\x8B\xEC\x53\x8B\xD9\x83\x7B\x0C\x00\x74\x54\x8B\x8B\x1C\x00\x02\x00\x85\xC9\x74\x2E\x8B\x01\x8B\x01\x8B\x40\x18\xFF\xD0";
 //const char* internalSendMask = "xxxxxxxxxx??xx????xxxxxxx";
@@ -27,7 +31,7 @@ uintptr_t receiveBuffer;
 //const char* internalRecvPattern = "\x8B\xCE\x52\xFF\75\xFC\xFF\x50\x10\x85\xDB\x75\x8D\x75\x8D\x5F\x5E\x5B\x8B\xE5";
 //const char* internalRecvMask = "xxxxxxxxxxxx???xxxxx";
 
-//bool logSentHook = false;
+bool logSentHook = false;
 bool logRecvHook = false;
 
 bool filterItemFlag = false;
@@ -52,16 +56,49 @@ void* rebp;
 void* resp;
 
 
-//void printSendBufferToLog();
+void printSendBufferToLog();
 void printRecvBufferToLog();
 
 //Packet item filter
 void p_filterItems();
 //Memory inventory reader
 int m_readItemId(int slotNum);
-
+//Memory based clean inventory
 void m_cleanInventory();
 
+
+DWORD jmpBackAddrSend;
+void __declspec(naked) sendHookFunc() {
+    __asm {
+        pushad
+        //adds 32 bytes to the stack addresses
+        mov eax, [esp + 0x24]
+        mov sentBuffPtr, eax
+        mov eax, [esp + 0x28]
+        mov packetHeader, eax
+        mov eax, [esp + 0x2C]
+        mov sentLen, eax
+        mov eax, [esp + 0x30]
+        mov packetUnknown, eax
+    }
+
+    sentBuffer = (unsigned char*)sentBuffPtr;
+
+    if (logSentHook) {
+        printSendBufferToLog();
+    }
+    __asm {
+        popad
+        //instructions we overwrote
+        //55
+        push ebp
+        //8B EC
+        mov ebp, esp
+        //B8 20 11 00 00 
+        mov eax, 0x1120
+        jmp[jmpBackAddrSend]
+    }
+}
 
 //https://docs.microsoft.com/en-us/cpp/assembler/inline/emit-pseudoinstruction?view=msvc-170
 #define mv_ax __asm _emit 0x66 __asm _emit 0xA1 __asm _emit 0xB8 __asm _emit 0x77 __asm _emit 0x04 __asm _emit 0x01
