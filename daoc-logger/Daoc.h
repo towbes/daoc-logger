@@ -4,6 +4,10 @@
 //typedef void (__thiscall* InternalSend)(void* thisClass, const char* , const char* data, DWORD length);
 //InternalSend Send;
 //void* thisPTR;
+
+typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
+_SendPacket Send = (_SendPacket)0x4281df;
+
 wchar_t moduleName[] = L"game.dll";
 size_t sendFuncOffset = 0x281DF;
 
@@ -13,7 +17,7 @@ int recvHookLen = 8;
 DWORD sentLen;
 DWORD packetHeader;
 DWORD packetUnknown;
-unsigned char* sentBuffer;
+char* sentBuffer;
 DWORD recvLen;
 unsigned char* recvBuffer;
 
@@ -82,7 +86,7 @@ void __declspec(naked) sendHookFunc() {
         mov packetUnknown, eax
     }
 
-    sentBuffer = (unsigned char*)sentBuffPtr;
+    sentBuffer = (char*)sentBuffPtr;
 
     if (logSentHook) {
         printSendBufferToLog();

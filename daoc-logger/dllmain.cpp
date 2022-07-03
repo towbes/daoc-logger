@@ -27,6 +27,9 @@ HWND hLogRecv;
 
 wchar_t craftedBuffer[533];
 char bufferToSend[533];
+//Pointer used in send function
+char* newBuff;
+char headerToSend[10];
 char appedToLog[533];
 char const hex_chars[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
@@ -60,58 +63,62 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             PostQuitMessage(0);
             return 0;
             break;
-//        case SEND_BUTTON:
-//#ifdef _DEBUG
-//            std::cout << "Send pressed!" << std::endl;
-//#endif
-//            GetWindowText(hCraftedPacket, craftedBuffer, 533);
-//            size_t len;
-//
-//            //convert buffer to chars:
-//            wcstombs_s(&len, bufferToSend, 533, craftedBuffer, 533);
-//#ifdef _DEBUG
-//            std::cout << bufferToSend << std::endl;
-//#endif
-//            //convert buffer to Bytes:
-//            size_t i;
-//            i = 0;
-//            for (size_t count = 0; count < len; ++i, count += 3) {
-//                if (bufferToSend[count] >= 'A') {
-//                    bufferToSend[count] -= 'A';
-//                    bufferToSend[count] += 10;
-//                }
-//                else {
-//                    bufferToSend[count] -= 48;
-//                }
-//
-//                if (bufferToSend[count+1] >= 'A') {
-//                    bufferToSend[count+1] -= 'A';
-//                    bufferToSend[count+1] += 10;
-//                }
-//                else {
-//                    bufferToSend[count+1] -= 48;
-//                }
-//
-//                bufferToSend[i] = (__int8)(((char)bufferToSend[count]) * (char)16);
-//                bufferToSend[i] += (__int8)bufferToSend[count + 1];
-//            }
-//            bufferToSend[i] = '\0';
-//
-//#ifdef _DEBUG
-//            //Debug output
-//            for (size_t x = 0; x < i; ++x) {
-//                std::cout << std::hex << (((int)bufferToSend[x]) & 0xff) << " ";
-//            }
-//            std::cout << std::endl;
-//
-//            //call internal send function
-//            std::cout << "Packet Lengh: " << i << std::endl;
-//#endif
-//            if (thisPTR != 0) {
-//                toHookSend(thisPTR, bufferToSend, i);
-//            }
-//            
-//            break;
+        case SEND_BUTTON:
+#ifdef _DEBUG
+            std::cout << "Send pressed!" << std::endl;
+#endif
+            GetWindowText(hCraftedPacket, craftedBuffer, 533);
+            size_t len;
+
+            //convert buffer to chars:
+            wcstombs_s(&len, bufferToSend, 533, craftedBuffer, 533);
+#ifdef _DEBUG
+            std::cout << bufferToSend << std::endl;
+            printf("Len: %zu\n", len);
+#endif
+            //convert buffer to Bytes:
+            size_t i;
+            i = 0;
+            for (size_t count = 0; count < len; ++i, count += 3) {
+                if (bufferToSend[count] >= 'A') {
+                    bufferToSend[count] -= 'A';
+                    bufferToSend[count] += 10;
+                }
+                else {
+                    bufferToSend[count] -= 48;
+                }
+
+                if (bufferToSend[count + 1] >= 'A') {
+                    bufferToSend[count + 1] -= 'A';
+                    bufferToSend[count + 1] += 10;
+                }
+                else {
+                    bufferToSend[count + 1] -= 48;
+                }
+
+                bufferToSend[i] = (__int8)(((char)bufferToSend[count]) * (char)16);
+                bufferToSend[i] += (__int8)bufferToSend[count + 1];
+            }
+            bufferToSend[i] = '\0';
+            
+#ifdef _DEBUG
+            //Debug output
+            for (size_t x = 0; x < i; ++x) {
+                std::cout << std::hex << (((int)bufferToSend[x]) & 0xff) << " ";
+            }
+            std::cout << std::endl;
+
+            //call internal send function
+            printf("Len: %zu\n", i);
+#endif
+            //make a pointer to the buffer+1 to account for packet header
+            newBuff = bufferToSend;
+            newBuff++;
+            //send first char of bufferToSend for the header
+            //Subtract 1 from i to account for the packet header
+            // last parameter is usually 0xffff
+            Send(newBuff, bufferToSend[0], i - 1, 0xffff);
+            break;
         case LOG_SEND:
             LogSend = IsDlgButtonChecked(hWindow, LOG_SEND);
             
