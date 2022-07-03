@@ -7,14 +7,17 @@
 
 typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
 _SendPacket Send;// = (_SendPacket)0x4281df;
-//size_t toHookSend = 8;
-
-wchar_t moduleName[] = L"game.dll";
+int sendHookLen = 8;
 //size_t sendFuncOffset = 0x281DF;
 
-int sendHookLen = 8;
+wchar_t moduleName[] = L"game.dll";
+
+
+
 //size_t recvFuncOffset = 0x27F5E;
 int recvHookLen = 8;
+
+//Variables for storing logged packets
 DWORD sentLen;
 DWORD packetHeader;
 DWORD packetUnknown;
@@ -22,6 +25,7 @@ char* sentBuffer;
 DWORD recvLen;
 unsigned char* recvBuffer;
 
+//Module base address
 uintptr_t moduleBase;
 
 //Used for pointer to the recv buffer
@@ -36,21 +40,12 @@ const char* internalSendMask = "xxxx????x????xxxxxx?xx";
 const char* internalRecvPattern = "\x59\x59\x66\x00\x00\x00\x00\x00\x00\x00\x00\x00\x9E";
 const char* internalRecvMask = "xxx?????????x";
 
+//Flags for actions to take on packets
 bool logSentHook = false;
 bool logRecvHook = false;
-
 bool filterItemFlag = false;
 
-void* reax;
-void* rebx;
-void* recx;
-void* redx;
-void* resi;
-void* redi;
-void* rebp;
-void* resp;
-
-
+//Functions in dllmain
 void printSendBufferToLog();
 void printRecvBufferToLog();
 
@@ -61,7 +56,7 @@ int m_readItemId(int slotNum);
 //Memory based clean inventory
 void m_cleanInventory();
 
-
+//Send Hook
 DWORD jmpBackAddrSend;
 void __declspec(naked) sendHookFunc() {
     __asm {
@@ -95,6 +90,7 @@ void __declspec(naked) sendHookFunc() {
     }
 }
 
+//Receive Hook
 //https://docs.microsoft.com/en-us/cpp/assembler/inline/emit-pseudoinstruction?view=msvc-170
 #define mv_ax __asm _emit 0x66 __asm _emit 0xA1 __asm _emit 0xB8 __asm _emit 0x77 __asm _emit 0x04 __asm _emit 0x01
 
@@ -125,7 +121,7 @@ void __declspec(naked) recvHookFunc() {
 }
 
 
-//inventory
+//item structure starts at 0xf9b8d0
 struct item_t {
     int itemId;
     unsigned char unknown[72];
