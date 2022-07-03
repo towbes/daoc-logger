@@ -6,13 +6,14 @@
 //void* thisPTR;
 
 typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
-_SendPacket Send = (_SendPacket)0x4281df;
+_SendPacket Send;// = (_SendPacket)0x4281df;
+//size_t toHookSend = 8;
 
 wchar_t moduleName[] = L"game.dll";
-size_t sendFuncOffset = 0x281DF;
+//size_t sendFuncOffset = 0x281DF;
 
 int sendHookLen = 8;
-size_t recvFuncOffset = 0x27F5E;
+//size_t recvFuncOffset = 0x27F5E;
 int recvHookLen = 8;
 DWORD sentLen;
 DWORD packetHeader;
@@ -29,26 +30,16 @@ uintptr_t receiveBuffer;
 //Used for pointer to send buffer
 uintptr_t sentBuffPtr;
 
-//const char* internalSendPattern = "\x55\x8B\xEC\x53\x8B\xD9\x83\x7B\x0C\x00\x74\x54\x8B\x8B\x1C\x00\x02\x00\x85\xC9\x74\x2E\x8B\x01\x8B\x01\x8B\x40\x18\xFF\xD0";
-//const char* internalSendMask = "xxxxxxxxxx??xx????xxxxxxx";
+const char* internalSendPattern = "\x55\x8B\xEC\xB8\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x83\x3D\x00\x82\x99\x00\x00\x0F\x85";
+const char* internalSendMask = "xxxx????x????xxxxxx?xx";
 
-//const char* internalRecvPattern = "\x8B\xCE\x52\xFF\75\xFC\xFF\x50\x10\x85\xDB\x75\x8D\x75\x8D\x5F\x5E\x5B\x8B\xE5";
-//const char* internalRecvMask = "xxxxxxxxxxxx???xxxxx";
+const char* internalRecvPattern = "\x59\x59\x66\x00\x00\x00\x00\x00\x00\x00\x00\x00\x9E";
+const char* internalRecvMask = "xxx?????????x";
 
 bool logSentHook = false;
 bool logRecvHook = false;
 
 bool filterItemFlag = false;
-
-//void* teax;
-//void* tebx;
-//void* tecx;
-//void* tedx;
-//void* tesi;
-//void* tedi;
-//void* tebp;
-//void* tesp;
-
 
 void* reax;
 void* rebx;

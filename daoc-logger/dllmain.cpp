@@ -272,18 +272,17 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     logText = std::vector<char>();
 
     moduleBase = (uintptr_t)GetModuleHandle(moduleName);
-    //Send = (InternalSend)(void*)(moduleBase + 0x281DF);//(ScanInternal(internalSendPattern, internalSendMask, (char*)(moduleBase+ 0x0500000), 0x3000000));
-    void* toHookSend = (void*)(moduleBase + 0x281DF);
-    void* toHookRecv = (void*)(moduleBase+ 0x27F5E);//(ScanInternal(internalRecvPattern, internalRecvMask, (char*)(moduleBase + 0x0500000), 0x3000000));
+    Send = (_SendPacket)(ScanModIn((char*)internalSendPattern, (char*)internalSendMask, "game.dll"));
+    void* toHookRecv = (void*)(ScanModIn((char*)internalRecvPattern, (char*)internalRecvMask, "game.dll"));
 
 
 #ifdef _DEBUG
-    std::cout << "send function location:" << std::hex << (int)toHookSend << std::endl;
+    std::cout << "send function location:" << std::hex << (int)Send << std::endl;
     std::cout << "module base is:" << std::hex << (int)moduleBase << std::endl;
     std::cout << "recv function location:" << std::hex << (int)toHookRecv << std::endl;
 #endif // _DEBUG
 
-    jmpBackAddrSend = (size_t)toHookSend + sendHookLen;
+    jmpBackAddrSend = (size_t)Send + sendHookLen;
     jmpBackAddrRecv = (size_t)toHookRecv + recvHookLen;
 
 #ifdef _DEBUG
@@ -291,7 +290,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "[Recv Jump Back Addy:] 0x" << std::hex << jmpBackAddrRecv << std::endl;
 #endif
 
-    Hook* sendHook = new Hook((void*)toHookSend, (void*)sendHookFunc, sendHookLen);
+    Hook* sendHook = new Hook((void*)Send, (void*)sendHookFunc, sendHookLen);
     Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
 
     MSG messages;

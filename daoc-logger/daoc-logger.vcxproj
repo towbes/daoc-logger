@@ -147,6 +147,7 @@
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ntdll_dbg.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="Scan.h" />
     <ClInclude Include="Daoc.h" />

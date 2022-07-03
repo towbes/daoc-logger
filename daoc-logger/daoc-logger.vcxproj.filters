@@ -29,5 +29,8 @@
     <ClInclude Include="Daoc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ntdll_dbg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
