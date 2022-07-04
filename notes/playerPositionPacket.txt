@@ -1,0 +1,19 @@
+Playerposition packet
+
+A9 F0 98 B8 47 BF 21 B4 47 20 CE 9D 45 9A F9 58 43 00 00 00 00 00 02 00 00 00 1B 00 00 00 00 1F BB 80 00 00 64 00 00 00 00 
+
+[0] = A9 = packet header
+
+
+fields.outgoing[0xA9] = L{
+    {ctype='unsigned char',      label='header'},                                 -- 01
+    {ctype='float',    label='E/W position'},           -- 05
+    {ctype='float',     label='N/S Position'},        -- 09   Inventory index of the same item
+    {ctype='unsigned char',     label='_unknown3'},                             -- 0A   Always 0? Likely padding
+}
+
+
+
+
+July 3, 2022:
+0x104A7FC is a pointer to the start of the position struct (0x05440118)

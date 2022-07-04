@@ -1,0 +1,15 @@
+0x79 sell request packet
+
+[SEND] 79 00 00 75 80 00 00 84 96 00 10 00 47 
+
+last byte is slot # to sell
+
+
+Send pressed!
+79 00 00 75 80 00 00 84 96 00 10 00 46
+Len: 39
+79 0 0 75 80 0 0 84 96 0 10 0 46
+Len: 13
+
+
+79 0 0 75 80 0 0 84 96 0 10 0 46

@@ -1,0 +1,4 @@
+Design Notes / To do
+
+- How to handle outgoing packets? Have functions add to queue and have a wrapper function to actually call send?
+  -> have to put a timer between packets?  can't use sleep cause it LDs the game.  Possible just to spam a whole inventory of packets though.

@@ -1,56 +1,78 @@
 #pragma once
 #include <set>
 
-//typedef void (__thiscall* InternalSend)(void* thisClass, const char* , const char* data, DWORD length);
-//InternalSend Send;
-//void* thisPTR;
-
 typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
 _SendPacket Send;// = (_SendPacket)0x4281df;
-int sendHookLen = 8;
-//size_t sendFuncOffset = 0x281DF;
 
 wchar_t moduleName[] = L"game.dll";
 
+//Module base address
+uintptr_t moduleBase;
 
-
-//size_t recvFuncOffset = 0x27F5E;
-int recvHookLen = 8;
-
+//Send hook variables
+//size_t sendFuncOffset = 0x281DF;
+int sendHookLen = 8;
+const char* internalSendPattern = "\x55\x8B\xEC\xB8\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x83\x3D\x00\x82\x99\x00\x00\x0F\x85";
+const char* internalSendMask = "xxxx????x????xxxxxx?xx";
+//Used for pointer to send buffer
+uintptr_t sentBuffPtr;
 //Variables for storing logged packets
 DWORD sentLen;
 DWORD packetHeader;
 DWORD packetUnknown;
 char* sentBuffer;
-DWORD recvLen;
-unsigned char* recvBuffer;
+//Flag for actions to take on packets
+bool logSentHook = false;
+//Function in dllmain
+void printSendBufferToLog();
 
-//Module base address
-uintptr_t moduleBase;
-
-//Used for pointer to the recv buffer
-uintptr_t receiveBuffer;
-
-//Used for pointer to send buffer
-uintptr_t sentBuffPtr;
-
-const char* internalSendPattern = "\x55\x8B\xEC\xB8\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x83\x3D\x00\x82\x99\x00\x00\x0F\x85";
-const char* internalSendMask = "xxxx????x????xxxxxx?xx";
-
+//Receive hook variables
+//size_t recvFuncOffset = 0x27F5E;
+int recvHookLen = 8;
 const char* internalRecvPattern = "\x59\x59\x66\x00\x00\x00\x00\x00\x00\x00\x00\x00\x9E";
 const char* internalRecvMask = "xxx?????????x";
-
+DWORD recvLen;
+unsigned char* recvBuffer;
+//Used for pointer to the recv buffer
+uintptr_t receiveBuffer;
 //Flags for actions to take on packets
-bool logSentHook = false;
 bool logRecvHook = false;
-bool filterItemFlag = false;
-
-//Functions in dllmain
-void printSendBufferToLog();
+//Function in dllmain
 void printRecvBufferToLog();
+
+
+//Hook right after run speed function, replace EAX with desired run speed
+//func loc is 438db7 on 7/4/2022
+//Player position pointer is at [ebx - 0x2C] from this instruction
+int runSpeedHookLen = 8;
+const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
+const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
+DWORD newRunspeed;
+bool changeRunSpeed = false;
+
+//autorun pattern
+const char* autorunPattern = "\x39\x3D\x00\x00\x00\x00\x75\x00\x39\x3D\x00\x00\x00\x00\x75";
+const char* autorunMask = "xx????x?xx????x";
+BYTE autorunToggle;
+
+
+struct playerpos_t {
+    float pos_x;
+    int heading;
+    unsigned char unknown[68];
+    float pos_y;
+};
+
+DWORD playerPositionPtr;
+playerpos_t* playerPosition;
+
 
 //Packet item filter
 void p_filterItems();
+//Flags for actions to take on packets
+bool filterItemFlag = false;
+
+
 //Memory inventory reader
 int m_readItemId(int slotNum);
 //Memory based clean inventory
@@ -93,7 +115,6 @@ void __declspec(naked) sendHookFunc() {
 //Receive Hook
 //https://docs.microsoft.com/en-us/cpp/assembler/inline/emit-pseudoinstruction?view=msvc-170
 #define mv_ax __asm _emit 0x66 __asm _emit 0xA1 __asm _emit 0xB8 __asm _emit 0x77 __asm _emit 0x04 __asm _emit 0x01
-
 DWORD jmpBackAddrRecv;
 void __declspec(naked) recvHookFunc() {
     __asm {
@@ -117,6 +138,45 @@ void __declspec(naked) recvHookFunc() {
         pop ecx
         mv_ax
         jmp[jmpBackAddrRecv]
+    }
+}
+
+
+//Run speed hook function
+//assigns new run speed to eax register
+DWORD jmpBackAddrRunSpeed;
+void __declspec(naked) runSpeedHookFunc() {
+    __asm {
+        pushad
+        mov eax, [ebx - 0x2c]
+        //get the player position ptr
+        mov playerPositionPtr, eax
+    }
+
+    playerPosition = (playerpos_t*)playerPositionPtr;
+
+    if (changeRunSpeed) {
+        //new runspeed is set in dllmain.cpp
+        __asm {
+            popad
+            //move run speed into eax
+            mov eax, newRunspeed
+            //instructions we overwrote
+            mov edx, eax
+            mov[ebp - 0x10], edx
+            fild dword ptr[ebp - 0x10]
+            jmp[jmpBackAddrRunSpeed]
+        }
+    }
+    else {
+        __asm {
+            popad
+            //instructions we overwrote
+            mov edx, eax
+            mov[ebp - 0x10], edx
+            fild dword ptr[ebp - 0x10]
+            jmp[jmpBackAddrRunSpeed]
+        }
     }
 }
 

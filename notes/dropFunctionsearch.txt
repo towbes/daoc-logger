@@ -1,0 +1,65 @@
+
+Instructions that accessed inventory slot after dropping an item:
+
+00421320 - 83 FA 07 - cmp edx,07
+00421C1D - 80 3E 00 - cmp byte ptr [esi],00
+
+
+Picking up an item: 
+
+004213B1 - 8B F3  - mov esi,ebx
+00778D43 - 80 38 00 - cmp byte ptr [eax],00
+00778823 - 8A 03  - mov al,[ebx]
+
+Slot IDs: https://github.com/Dawn-of-Light/DOLSharp/blob/9af87af011497c3fda852559b01a269c889b162e/GameServer/gameutils/IGameInventory.cs
+
+Incoming inventory function: 0042138f
+
+
+
+Address 0019EB5C stores item info that is being picked up / dropped.
+
+Writes to that address when picking up:
+00428756 - 66 89 06  - mov [esi],ax
+
+
+
+Function 0042130c    moveItem? (undefined4 param_1, int slotSource)
+
+param_1 is the destination slot if it is a player inventory slot (or probably vault/house vault slot`)
+
+EBX register is set in previous function to the destion if that destination is ground
+
+Inventory Struct:
+
+from start of string of first item -> start of string for second item
+
+00F9BAF0 - 00F9B91C = 1D4 or 468
+
+
+-> first slot would be at slot 40 (00f9b8d0) - 4920 (468 x 40)
+00f9b8d0 - 4920 = F9 6FB0
+
+Functions that write to slot41BackpackItemId when moving / picking up:
+00421320 - 83 FA 07 - cmp edx,07
+004213B1 - 8B F3  - mov esi,ebx
+
+Function that accesses slot41BackpackItemId when item is dropped: 
+00421320 - 83 FA 07 - cmp edx,07
+
+Buffer where item info is written to before icons get created: 0019EB5C
+
+
+Packets: Move bronze standard great sowrd 
+
+[RECV] 02 02 00 00 00 FF 00 28 FB 90 02 12 34 40 86 00 00 0C 64 64 64 05 01 00 07 01 00 00 02 00 00 1B 62 72 6F 6E 7A 65 20 73 74 61 6E 64 61 72 64 20 67 72 65 61 74 20 73 77 6F 72 64 29 
+
+pckup sowrd
+[RECV] 02 01 00 00 00 FF 00 28 FB 90 02 12 34 40 86 00 00 0C 64 64 64 05 01 00 07 01 00 00 02 00 00 1B 62 72 6F 6E 7A 65 20 73 74 61 6E 64 61 72 
+
+drop top slot backpack
+[RECV] 02 01 00 00 00 FF 00 28
+
+02 01 00 00 00 FF 00 28 FB 90 02 12 34 40 86 00 00 0C 64 64 64 05 01 00 07 01 00 00 02 00 00 1B 62 72 6F 6E 7A 65 20 73 74 61 6E 64 61 72 64 20 67 72 65 61 74 20 73 77 6F 72 64
+
+02 02 00 00 00 FF 00 2A D0 6F 01 00 00 00 29 00 00 00 64 00 00 00 00 00 74 01 00 00 08 1F AA 17 47 61 74 65 77 61 79 20 2D 20 50 65 72 73 6F 6E 61 6C 20 42 69 6E 64 00 00 1A 50 65 72 73 6F 6E 61 6C 20 42 69 6E 64 20 52 65 63 61 6C 6C 20 53 74 6F 6E 65 28
