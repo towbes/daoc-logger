@@ -32,5 +32,8 @@
     <ClInclude Include="ntdll_dbg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PacketProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 #pragma once
 #include <set>
+#include <queue>
 
 typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
 _SendPacket Send;// = (_SendPacket)0x4281df;
@@ -8,6 +9,15 @@ wchar_t moduleName[] = L"game.dll";
 
 //Module base address
 uintptr_t moduleBase;
+
+struct send_packet {
+    std::vector<char> packetBuffer;
+    DWORD packetHeader;
+    DWORD packetLen;
+    DWORD unknown;
+};
+
+std::queue<std::shared_ptr<send_packet>> sendQueue;
 
 //Send hook variables
 //size_t sendFuncOffset = 0x281DF;
