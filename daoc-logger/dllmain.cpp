@@ -339,7 +339,7 @@ inline void printSendBufferToLog() {
 }
 
 //variables to track timer between sending packets isntead of using sleep
-const std::chrono::milliseconds duration = std::chrono::milliseconds(500);
+const std::chrono::milliseconds duration = std::chrono::milliseconds(750);
 auto begin = std::chrono::high_resolution_clock::now();
 auto end = std::chrono::high_resolution_clock::now();
 
