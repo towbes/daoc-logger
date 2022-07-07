@@ -10,6 +10,7 @@
 #include "PacketProcessor.h"
 #include <thread>
 #include <chrono>
+#include "mem.h"
 
 #define MYMENU_EXIT (WM_APP + 100)
 #define SEND_BUTTON (WM_APP + 101)
@@ -46,9 +47,13 @@ char* newBuff;
 char headerToSend[10];
 char appedToLog[533];
 char const hex_chars[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+std::vector<char> logText;
 
 //uintptr_t moduleBase;
-std::vector<char> logText;
+//HMODULE kernel32base;
+
+
+
 
 
 HMENU CreateDLLWindowMenu(){
@@ -218,18 +223,18 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             m_cleanInventory();
             break;
         case SELLINV_BUTTON:
-            newBufferToSend[0] = '\x79';
-            newBufferToSend[1] = '\x0';
-            newBufferToSend[2] = '\x0';
-            newBufferToSend[3] = '\x75';
-            newBufferToSend[4] = '\x80';
-            newBufferToSend[5] = '\x0';
-            newBufferToSend[6] = '\x0';
-            newBufferToSend[7] = '\x84';
-            newBufferToSend[8] = '\x96';
-            newBufferToSend[9] = '\x0';
-            newBufferToSend[10] = '\x10';
-            newBufferToSend[11] = '\x0';
+            //newBufferToSend[0] = '\x79';
+            //newBufferToSend[1] = '\x0';
+            //newBufferToSend[2] = '\x0';
+            //newBufferToSend[3] = '\x75';
+            //newBufferToSend[4] = '\x80';
+            //newBufferToSend[5] = '\x0';
+            //newBufferToSend[6] = '\x0';
+            //newBufferToSend[7] = '\x84';
+            //newBufferToSend[8] = '\x96';
+            //newBufferToSend[9] = '\x0';
+            //newBufferToSend[10] = '\x10';
+            //newBufferToSend[11] = '\x0';
             //bufferToSend[0] = '\x79'; // packet header
             //bufferToSend[1] = '\x0';
             //bufferToSend[2] = '\x0';
@@ -245,7 +250,7 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             //bufferToSend[12] = '\x28'; // slot id
             for (int i = 40; i < 80; i++) {
                 //bufferToSend[12] = i;
-                newBufferToSend[12] = i;
+                //newBufferToSend[12] = i;
 
                 //make a pointer to the buffer+1 to account for packet header
                 //newBuff = bufferToSend;
@@ -258,18 +263,19 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
                     //Initialize an object then make it a shared pointer 
                     //https://stackoverflow.com/questions/42250767/making-a-shared-pointer-to-a-new-struct-with-initialisation
                     //send_packet tmpPack = { newBuff, bufferToSend[0], 13, 0xffff };
-                    std::shared_ptr<send_packet> packetPtr(new send_packet{ newBufferToSend, (DWORD)newBufferToSend[0], 13, 0xffff });
+                    //std::shared_ptr<send_packet> packetPtr(new send_packet{ newBufferToSend, (DWORD)newBufferToSend[0], 13, 0xffff });
 #ifdef _DEBUG
                     //Debug output
-                    std::cout << "[Send to Queue] ";
-                    std::cout << std::hex << (((int)packetPtr->packetHeader) & 0xff) << " ";
-                    for (size_t x = 1; x < 13; ++x) {
-                        std::cout << std::hex << (((int)packetPtr->packetBuffer[x]) & 0xff) << " ";
-                    }
-                    std::cout << std::endl;
+                    //std::cout << "[Send to Queue] ";
+                    //std::cout << std::hex << (((int)packetPtr->packetHeader) & 0xff) << " ";
+                    //for (size_t x = 1; x < 13; ++x) {
+                    //    std::cout << std::hex << (((int)packetPtr->packetBuffer[x]) & 0xff) << " ";
+                    //}
+                    //std::cout << std::endl;
+                    std::cout << "Slot number: " << std::hex << i << std::endl;
 
 #endif
-                    queueSendPacket(packetPtr);
+                    SellRequest(i);
                     //Send(newBuff, bufferToSend[0], 13, 0xffff);
                 }
             }
@@ -345,7 +351,6 @@ auto end = std::chrono::high_resolution_clock::now();
 
 
 void sendPacketHandler() {
-    
     while (sendThreadRunning) {
         end = std::chrono::high_resolution_clock::now();
         if (sendQueue.size() > 0 && std::chrono::duration_cast<std::chrono::milliseconds>(end - begin) >= duration) {
@@ -422,8 +427,20 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     logText = std::vector<char>();
 
     moduleBase = (uintptr_t)GetModuleHandle(moduleName);
+
+    ////patch antidebug https://guidedhacking.com/threads/how-to-bypass-anticheat-start-here-beginners-guide.9882/
+    //kernel32base = GetModuleHandle(L"kernel32.dll");
+    //char* functionAddress = (char*)GetProcAddress(kernel32base, "IsDebuggerPresent");
+    ////xor eax, eax; return near, nop nop
+    //Patch(functionAddress, (char*)"\x31\xC0\xC3\x90\x90", 5);
+    //uintptr_t pebAddress = __readfsdword(0x30);
+    //Patch((char*)pebAddress + 0x2, (char*)"\x0", 1);
+
+
     //Send hook
     Send = (_SendPacket)(ScanModIn((char*)internalSendPattern, (char*)internalSendMask, "game.dll"));
+    //Sell Hook
+    SellRequest = (_SellRequest)(ScanModIn((char*)sellRequestPattern, (char*)sellRequestMask, "game.dll"));
     //Receive hook
     void* toHookRecv = (void*)(ScanModIn((char*)internalRecvPattern, (char*)internalRecvMask, "game.dll"));
     //Runspeed Hook
@@ -441,6 +458,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "module base is:" << std::hex << (int)moduleBase << std::endl;
     std::cout << "send function location:" << std::hex << (int)Send << std::endl;
     std::cout << "recv function location:" << std::hex << (int)toHookRecv << std::endl;
+    std::cout << "Sell request location:" << std::hex << (int)SellRequest << std::endl;
     std::cout << "runspeed function location:" << std::hex << (int)toHookRunSpeed << std::endl << std::endl;
     //std::cout << "autorunPtr location:" << std::hex << (int)autorunPtr << std::endl;
     //std::cout << "autorunTogglePtr: " << std::hex << (int)autorunTogglePtr << std::endl;
@@ -463,6 +481,13 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     Hook* sendHook = new Hook((void*)Send, (void*)sendHookFunc, sendHookLen);
     Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
     Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
+
+#ifdef _DEBUG
+    std::cout << "[Player Position Pointer:] 0x" << std::hex << playerPositionPtr << std::endl;
+    if (playerPositionPtr > 0) {
+        std::cout << "[Player Position X:] " << std::setprecision(5) << playerPosition->pos_x << std::endl;
+    }
+#endif
 
     MSG messages;
     HMENU hMenu = CreateDLLWindowMenu();
@@ -514,10 +539,9 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd); // redraw window;
-
     //Start the send packet handler thread
-    std::thread sendPacketThread(sendPacketHandler);
-    sendThreadRunning = true;
+    //std::thread sendPacketThread(sendPacketHandler);
+    //sendThreadRunning = true;
 
     while (GetMessage(&messages, NULL, 0, 0)){
         if (GetAsyncKeyState(VK_END) & 1) {
@@ -527,10 +551,10 @@ DWORD WINAPI WindowThread(HMODULE hModule){
         DispatchMessage(&messages);
     }
     //turn off the send handler
-    sendThreadRunning = false;
-    RequestPassed.store(true);
-    RequestPassed.notify_all();
-    sendPacketThread.join();
+    //sendThreadRunning = false;
+    //RequestPassed.store(true);
+    //RequestPassed.notify_all();
+    //sendPacketThread.join();
 
     //exit:
     delete recvHook;

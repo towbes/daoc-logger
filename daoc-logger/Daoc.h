@@ -5,6 +5,10 @@
 typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
 _SendPacket Send;// = (_SendPacket)0x4281df;
 
+typedef void(__cdecl* _SellRequest)(int slotNum);
+_SellRequest SellRequest;// = (_SendPacket)0x4281df;
+
+
 wchar_t moduleName[] = L"game.dll";
 
 //Module base address
@@ -65,12 +69,19 @@ const char* autorunPattern = "\x39\x3D\x00\x00\x00\x00\x75\x00\x39\x3D\x00\x00\x
 const char* autorunMask = "xx????x?xx????x";
 BYTE autorunToggle;
 
+//Sell Request pattern
+const char* sellRequestPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x56\x8B\x35\x00\x00\x00\x00\xD9\x06\xE8\x00\x00\x00\x00\xD9\x46\x00\x89\x45\x00\xE8\x00\x00\x00\x00\x89\x45\x00\x6A\x00\x58\xE8\x00\x00\x00\x00\x66\x89\x00\x00\x66\x8B\x00\x00\x8D\x75\x00\x66\x89\x00\x00\xE8\x00\x00\x00\x00\x6A\x00\x6A\x00\x8B\xC6\x6A";
+const char* sellRequestMask = "xxxxx?xxxxxx?x?xxx????xxx????xx?xx?x????xx?x?xx????xx??xx??xx?xx??x????x?x?xxx";
 
 struct playerpos_t {
     float pos_x;
     int heading;
     unsigned char unknown[68];
     float pos_y;
+    unsigned char unknown2[8];
+    char unknown3;
+    uint16_t pos_z;
+    char unknown4;
 };
 
 DWORD playerPositionPtr;
@@ -158,11 +169,13 @@ DWORD jmpBackAddrRunSpeed;
 void __declspec(naked) runSpeedHookFunc() {
     __asm {
         pushad
+        //get the player position ptr out of ebx-0x2c
+        //Have to move forward at least once after loading to trigger this load
         mov eax, [ebx - 0x2c]
-        //get the player position ptr
         mov playerPositionPtr, eax
     }
 
+    //this causes
     playerPosition = (playerpos_t*)playerPositionPtr;
 
     if (changeRunSpeed) {

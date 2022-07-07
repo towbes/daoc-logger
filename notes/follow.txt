@@ -1,0 +1,39 @@
+Implement following:
+
+Use memory mapped file to share data between DLLs and a central operating window
+
+https://docs.microsoft.com/en-us/dotnet/standard/io/memory-mapped-files
+
+https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createfilemappinga
+
+
+DLL got injected!
+module base is:400000
+send function location:4281df
+recv function location:427f5e
+runspeed function location:438db7
+
+autorunTogglePtr2: 1049898
+
+[Send Jump Back Addy:] 0x4281e7
+[Recv Jump Back Addy:] 0x427f66
+[RunSpeed Jump Back Addy:] 0x438dbf
+
+
+Headings in memory
+
+South: 0
+North: 2000
+East: 3000
+West: 1000
+
+In game headings:
+North = 0
+East = 90
+South = 180
+West = 270
+
+In game heading = (rawHeading + 0x800) * 0x168) / 0x1000)
+
+E/W = x
+N/S = y

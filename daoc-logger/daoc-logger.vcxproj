@@ -150,6 +150,7 @@
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="mem.h" />
     <ClInclude Include="ntdll_dbg.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="PacketProcessor.h" />
