@@ -17,3 +17,30 @@ fields.outgoing[0xA9] = L{
 
 July 3, 2022:
 0x104A7FC is a pointer to the start of the position struct (0x05440118)
+
+
+Position update packet:
+[SEND] A9 C1 93 08 49 76 E2 F9 48 30 14 0F 45 00 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00 1E 73 80 00 00 64 00 00 00 00 
+
+struct positionUpdate {
+    char packetHeader;
+    float pos_x;
+    float pos_y;
+    float pos_z;
+    uint_32 unknown;
+    uint_32 unknown2;
+    uint_8 zoneId;
+
+}
+
+In game /loc: 
+
+Gaheris Camelot Hills: loc=10556,28435,2289 dir=145
+
+
+change zone to camelot (zone id 26 = 0x1A)
+[SEND] A9 [F0 80 FC 46] [53 85 FD 46] [4F FE F9 45] [04 40 45 43] [00 00 00 00] [00 08 00 00] 00 1A 00 00 00 00 16 4C 80 00 00 64 00 00 00 00 
+
+18 + 3
+
+384 + 3

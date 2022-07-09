@@ -23,9 +23,9 @@ autorunTogglePtr2: 1049898
 Headings in memory
 
 South: 0
-North: 2000
-East: 3000
-West: 1000
+North: 2048
+East: 3072
+West: 1024
 
 In game headings:
 North = 0
@@ -37,3 +37,10 @@ In game heading = (rawHeading + 0x800) * 0x168) / 0x1000)
 
 E/W = x
 N/S = y
+
+7/6/2022 location of the loc text buffer: 0xF967A0
+
+
+Record waypoints of x, y, heading
+
+Turn on autorun and just 

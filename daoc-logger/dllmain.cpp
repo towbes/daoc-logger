@@ -22,6 +22,7 @@
 #define SELLINV_BUTTON (WM_APP + 107)
 #define TOGGLE_RUNSPEED (WM_APP + 108)
 #define CMB_SPEED (WM_APP + 109)
+#define GO_POS (WM_APP + 110)
 
 HMODULE inj_hModule;
 HWND hCraftedPacket;
@@ -38,6 +39,26 @@ HWND hRunSpeedValues;
 int ItemIndex = 0;
 BOOL runToggle = 0;
 BOOL sendThreadRunning = false;
+
+//Position and heading
+HWND hDlgPosX;
+HWND hDlgPosY;
+HWND hDlgPosZ;
+HWND hDlgPosHeading;
+#define TIMER_DURATION 100
+static UINT idTimer = 1;
+void updatePos();
+wchar_t posBuffer[10];
+int newPosX = 0;
+int newPosY = 0;
+
+//Position and heading
+HWND hDlgNewPosX;
+HWND hDlgNewPosY;
+HWND hDlgNewPosZ;
+HWND hDlgNewPosHeading;
+
+
 
 wchar_t craftedBuffer[533];
 char bufferToSend[533];
@@ -71,14 +92,22 @@ HMENU CreateDLLWindowMenu(){
 }
 
 LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+
     switch (uMessage) {
+    case WM_TIMER:
+        // update position labels whenever timer ticks
+        updatePos();
+
+        return 0;
     case WM_CLOSE:
     case WM_DESTROY:
+        KillTimer(hWindow, idTimer);
         PostQuitMessage(0);
         return 0;
         break;
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
+
         case MYMENU_EXIT:
             PostQuitMessage(0);
             return 0;
@@ -109,8 +138,10 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             runToggle = IsDlgButtonChecked(hWindow, TOGGLE_RUNSPEED);
 #ifdef _DEBUG
             std::cout << "Run speed is " << ((runToggle != BST_CHECKED) ? "enabled" : "disabled") << std::endl;
-            std::cout << "PlayerPosPtr is " << std::hex << playerPositionPtr << std::endl;
-            std::cout << "Player x is " << std::setprecision(10) << playerPosition->pos_x << std::endl;
+            if (playerPositionPtr != 0x00) {
+                std::cout << "PlayerPosPtr is " << std::hex << playerPositionPtr << std::endl;
+                std::cout << "Player x is " << std::setprecision(10) << playerPosition->pos_x << std::endl;
+            }
 #endif
             if (runToggle == BST_CHECKED) {
                 CheckDlgButton(hWindow, TOGGLE_RUNSPEED, BST_UNCHECKED);
@@ -223,66 +254,23 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             m_cleanInventory();
             break;
         case SELLINV_BUTTON:
-            //newBufferToSend[0] = '\x79';
-            //newBufferToSend[1] = '\x0';
-            //newBufferToSend[2] = '\x0';
-            //newBufferToSend[3] = '\x75';
-            //newBufferToSend[4] = '\x80';
-            //newBufferToSend[5] = '\x0';
-            //newBufferToSend[6] = '\x0';
-            //newBufferToSend[7] = '\x84';
-            //newBufferToSend[8] = '\x96';
-            //newBufferToSend[9] = '\x0';
-            //newBufferToSend[10] = '\x10';
-            //newBufferToSend[11] = '\x0';
-            //bufferToSend[0] = '\x79'; // packet header
-            //bufferToSend[1] = '\x0';
-            //bufferToSend[2] = '\x0';
-            //bufferToSend[3] = '\x75';
-            //bufferToSend[4] = '\x80';
-            //bufferToSend[5] = '\x0';
-            //bufferToSend[6] = '\x0';
-            //bufferToSend[7] = '\x84';
-            //bufferToSend[8] = '\x96';
-            //bufferToSend[9] = '\x0';
-            //bufferToSend[10] = '\x10';
-            //bufferToSend[11] = '\x0';
-            //bufferToSend[12] = '\x28'; // slot id
-            for (int i = 40; i < 80; i++) {
-                //bufferToSend[12] = i;
-                //newBufferToSend[12] = i;
 
-                //make a pointer to the buffer+1 to account for packet header
-                //newBuff = bufferToSend;
-                //newBuff++;
-                //send first char of bufferToSend for the header
-                //Subtract 1 from i to account for the packet header
-                // last parameter is usually 0xffff
-                //only send a packet if ther eis an item there
+            for (int i = 47; i < 80; i++) {
                 if (m_readItemId(i) > 0) {
-                    //Initialize an object then make it a shared pointer 
-                    //https://stackoverflow.com/questions/42250767/making-a-shared-pointer-to-a-new-struct-with-initialisation
-                    //send_packet tmpPack = { newBuff, bufferToSend[0], 13, 0xffff };
-                    //std::shared_ptr<send_packet> packetPtr(new send_packet{ newBufferToSend, (DWORD)newBufferToSend[0], 13, 0xffff });
 #ifdef _DEBUG
-                    //Debug output
-                    //std::cout << "[Send to Queue] ";
-                    //std::cout << std::hex << (((int)packetPtr->packetHeader) & 0xff) << " ";
-                    //for (size_t x = 1; x < 13; ++x) {
-                    //    std::cout << std::hex << (((int)packetPtr->packetBuffer[x]) & 0xff) << " ";
-                    //}
-                    //std::cout << std::endl;
                     std::cout << "Slot number: " << std::hex << i << std::endl;
 
 #endif
                     SellRequest(i);
-                    //Send(newBuff, bufferToSend[0], 13, 0xffff);
+                    
                 }
             }
             break;
         case CLEAR_BUTTON:
             logText.erase(logText.begin(), logText.end());
             SetWindowTextA(hLog, "Cleared! :)\r\nFind Tutorials on Guidedhacking.com!");
+        //case GO_POS:
+
         }
     }
     return DefWindowProc(hWindow, uMessage, wParam, lParam);
@@ -306,6 +294,22 @@ BOOL RegisterDLLWindowClass(const wchar_t szClassName[]) {
     if (!RegisterClassEx(&wc))
         return 0;
     return 1;
+}
+
+inline void updatePos() {
+
+    if (playerPosition != NULL) {
+        std::wstringstream tmp;
+        tmp << std::fixed << std::setprecision(0) << playerPosition->pos_x;
+        SetWindowText(hDlgPosX, tmp.str().c_str());
+        tmp.str(L"");
+        tmp << std::fixed << std::setprecision(0) << playerPosition->pos_y;
+        SetWindowText(hDlgPosY, tmp.str().c_str());
+        tmp.str(L"");
+        tmp << std::fixed << std::setprecision(0) << playerPosition->pos_z;
+        SetWindowText(hDlgPosZ, tmp.str().c_str());
+        SetWindowText(hDlgPosHeading, std::to_wstring(playerPosition->heading).c_str());
+    }
 }
 
 inline void printSendBufferToLog() {
@@ -348,41 +352,6 @@ inline void printSendBufferToLog() {
 const std::chrono::milliseconds duration = std::chrono::milliseconds(1000);
 auto begin = std::chrono::high_resolution_clock::now();
 auto end = std::chrono::high_resolution_clock::now();
-
-
-void sendPacketHandler() {
-    while (sendThreadRunning) {
-        end = std::chrono::high_resolution_clock::now();
-        if (sendQueue.size() > 0 && std::chrono::duration_cast<std::chrono::milliseconds>(end - begin) >= duration) {
-            //RequestPassed.wait(false);
-            if (RequestPassed.is_lock_free()) {
-                std::lock_guard<std::mutex> lg(RequestHandleMutex);
-                //copy elements 1 -> packetlen - 1 of packetBuffer into char* (element 0 is the header)
-                std::copy(&sendQueue.front()->packetBuffer[1], &sendQueue.front()->packetBuffer[sendQueue.front()->packetLen], bufferToSend);
-#ifdef _DEBUG
-                //Debug output
-                std::cout << "[Send to Send] ";
-                std::cout << std::hex << (((int)sendQueue.front()->packetHeader) & 0xff) << " ";
-                //printing copied char buffer so should be elements 0 -> 11
-                for (size_t x = 0; x < 12; ++x) {
-                    std::cout << std::hex << (((int)bufferToSend[x]) & 0xff) << " ";
-                }
-                std::cout << std::endl;
-
-#endif
-                Send(bufferToSend, sendQueue.front()->packetHeader, sendQueue.front()->packetLen, sendQueue.front()->unknown);
-                sendQueue.pop();
-#ifdef _DEBUG
-                //Debug output
-                std::cout << std::endl << "Send queue size: " << sendQueue.size() << std::endl;
-
-#endif
-                RequestPassed.store(false);
-            }
-            begin = std::chrono::high_resolution_clock::now();
-        }
-    }
-}
 
 
 //Might have to use Semapores if Recv and Send run in different threads
@@ -496,6 +465,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     HWND hFilterItems;
     HWND hCleanItemButton;
     HWND hSellInventoryButton;
+    HWND hGoButton;
     
     RegisterDLLWindowClass(L"InjectedDLLWindowClass");
     HWND hwnd = CreateWindowEx(0, L"InjectedDLLWindowClass", L"Erarnitox's Tera Proxy | GuidedHacking.com", WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 1020, 1085, NULL, hMenu, inj_hModule, NULL);
@@ -507,7 +477,37 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     hSendButton = CreateWindowEx(0, L"button", L"Send", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 1000, 100, 30, hwnd, (HMENU)SEND_BUTTON, hModule, NULL);
     hCraftedPacket = CreateWindowEx(0, L"edit", L"<Packet Data>", WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_BORDER, 110, 1000, 900, 100, hwnd, NULL, hModule, NULL);
 
+    //Current Position labels
+    HWND hLabelPos = CreateWindowEx(0, L"STATIC", L"CurrPos", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 120, 730, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelX = CreateWindowEx(0, L"STATIC", L"X: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 120, 750, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelY = CreateWindowEx(0, L"STATIC", L"Y: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 120, 775, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelZ = CreateWindowEx(0, L"STATIC", L"Z: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 120, 800, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelH = CreateWindowEx(0, L"STATIC", L"H: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 120, 825, 100, 25, hwnd, NULL, hModule, NULL);
+    SetTimer(hwnd, idTimer, TIMER_DURATION, (TIMERPROC)NULL);
+
+    //Current position dialogs
+    hDlgPosX = CreateWindowEx(0, L"STATIC", L"55555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140, 750, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgPosY = CreateWindowEx(0, L"STATIC", L"55555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140, 775, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgPosZ = CreateWindowEx(0, L"STATIC", L"5555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140, 800, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgPosHeading = CreateWindowEx(0, L"STATIC", L"5555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140, 825, 100, 25, hwnd, NULL, hModule, NULL);
     
+    int x_offset = 100;
+    //New position labels
+    HWND hLabelNewPos = CreateWindowEx(0, L"STATIC", L"New Pos", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x_offset, 730, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelNewX = CreateWindowEx(0, L"STATIC", L"New X: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x_offset, 750, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelNewY = CreateWindowEx(0, L"STATIC", L"New Y: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x_offset, 775, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelNewZ = CreateWindowEx(0, L"STATIC", L"New Z: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x_offset, 800, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelNewH = CreateWindowEx(0, L"STATIC", L"H: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x_offset, 825, 100, 25, hwnd, NULL, hModule, NULL);
+
+    int x2_offset = x_offset + 60;
+    //New position dialogs
+    hDlgNewPosX = CreateWindowEx(0, L"EDIT", L"55555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x2_offset, 750, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgNewPosY = CreateWindowEx(0, L"EDIT", L"55555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x2_offset, 775, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgNewPosZ = CreateWindowEx(0, L"EDIT", L"5555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x2_offset, 800, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgNewPosHeading = CreateWindowEx(0, L"EDIT", L"5555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x2_offset, 825, 100, 25, hwnd, NULL, hModule, NULL);
+    hGoButton = CreateWindowEx(0, L"button", L"Go Pos", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 140 + x2_offset, 850, 100, 25, hwnd, (HMENU)GO_POS, hModule, NULL);
+
+
     hLogSend = CreateWindowEx(0, L"button", L"Log Send", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 110, 705, 100, 25, hwnd, (HMENU)LOG_SEND, hModule, NULL);
     hLogRecv = CreateWindowEx(0, L"button", L"Log Recv", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 210, 705, 100, 25, hwnd, (HMENU)LOG_RECV, hModule, NULL);
     hFilterItems = CreateWindowEx(0, L"button", L"Filter Items", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 310, 705, 100, 25, hwnd, (HMENU)FILTER_ITEMS, hModule, NULL);
@@ -539,9 +539,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd); // redraw window;
-    //Start the send packet handler thread
-    //std::thread sendPacketThread(sendPacketHandler);
-    //sendThreadRunning = true;
+
 
     while (GetMessage(&messages, NULL, 0, 0)){
         if (GetAsyncKeyState(VK_END) & 1) {
@@ -550,11 +548,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
         TranslateMessage(&messages);
         DispatchMessage(&messages);
     }
-    //turn off the send handler
-    //sendThreadRunning = false;
-    //RequestPassed.store(true);
-    //RequestPassed.notify_all();
-    //sendPacketThread.join();
+
 
     //exit:
     delete recvHook;

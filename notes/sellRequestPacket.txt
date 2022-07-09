@@ -1,5 +1,10 @@
 0x79 sell request packet
 
+Function sig:
+Address of signature = game.dll + 0x0002B2E3
+"\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x56\x8B\x35\x00\x00\x00\x00\xD9\x06\xE8\x00\x00\x00\x00\xD9\x46\x00\x89\x45\x00\xE8\x00\x00\x00\x00\x89\x45\x00\x6A\x00\x58\xE8\x00\x00\x00\x00\x66\x89\x00\x00\x66\x8B\x00\x00\x8D\x75\x00\x66\x89\x00\x00\xE8\x00\x00\x00\x00\x6A\x00\x6A\x00\x8B\xC6\x6A", "xxxxx?xxxxxx?x?xxx????xxx????xx?xx?x????xx?x?xx????xx??xx??xx?xx??x????x?x?xxx"
+"55 8B EC 83 EC ? 83 3D 00 82 99 00 ? 75 ? 56 8B 35 ? ? ? ? D9 06 E8 ? ? ? ? D9 46 ? 89 45 ? E8 ? ? ? ? 89 45 ? 6A ? 58 E8 ? ? ? ? 66 89 ? ? 66 8B ? ? 8D 75 ? 66 89 ? ? E8 ? ? ? ? 6A ? 6A ? 8B C6 6A"
+
 [SEND] 79 00 00 75 80 00 00 84 96 00 10 00 47 
 
 last byte is slot # to sell
@@ -57,3 +62,29 @@ duskwood heater shield
 
 spool of solid trim
 [SEND] 79 00 00 75 7A 00 00 84 B4 00 0C 00 28
+
+10x runewood wooden boards
+[SEND] 79 00 00 75 6B 00 00 84 B9 00 0C 00 28
+
+
+kite shield
+Bag 1:
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 28 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 29 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 2A 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 2B 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 2C 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 2D 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 2E 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 2F 
+bag2:
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 30 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 31 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 32 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 33 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 34 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 35 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 36 
+[SEND] 79 00 00 78 E6 00 00 84 72 00 05 00 37
+
+P

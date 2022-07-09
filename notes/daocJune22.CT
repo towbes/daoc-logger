@@ -4,7 +4,6 @@
     <CheatEntry>
       <ID>0</ID>
       <Description>"Some kind of tick counter?"</Description>
-      <LastState Value="0000015C" RealAddress="01047794"/>
       <ShowAsHex>1</ShowAsHex>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>4 Bytes</VariableType>
@@ -13,7 +12,6 @@
     <CheatEntry>
       <ID>2</ID>
       <Description>"static pointer"</Description>
-      <LastState Value="64207469" RealAddress="009466C0"/>
       <ShowAsHex>1</ShowAsHex>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>4 Bytes</VariableType>
@@ -22,7 +20,6 @@
     <CheatEntry>
       <ID>4</ID>
       <Description>"static pointer"</Description>
-      <LastState Value="00773045" RealAddress="009466FC"/>
       <ShowAsHex>1</ShowAsHex>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>4 Bytes</VariableType>
@@ -31,7 +28,6 @@
     <CheatEntry>
       <ID>5</ID>
       <Description>"Player Location Information E and W"</Description>
-      <LastState Value="0" RealAddress="009ABAA8"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Float</VariableType>
       <Address>game.dll+5aBAA8</Address>
@@ -39,7 +35,6 @@
     <CheatEntry>
       <ID>6</ID>
       <Description>"Player location information N and S"</Description>
-      <LastState Value="0" RealAddress="009ABAAC"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Float</VariableType>
       <Address>game.dll+5abaac</Address>
@@ -47,7 +42,6 @@
     <CheatEntry>
       <ID>7</ID>
       <Description>"player location information up and down"</Description>
-      <LastState Value="0" RealAddress="009ABAB0"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Float</VariableType>
       <Address>game.dll+5abab0</Address>
@@ -55,7 +49,6 @@
     <CheatEntry>
       <ID>8</ID>
       <Description>"movement speed"</Description>
-      <LastState Value="0" RealAddress="009ABAB8"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Float</VariableType>
       <Address>game.dll+5abab8</Address>
@@ -103,28 +96,24 @@
     <CheatEntry>
       <ID>25</ID>
       <Description>"floatCoord"</Description>
-      <LastState Value="13838" RealAddress="01FAF680"/>
       <VariableType>Float</VariableType>
       <Address>game.dll+1BAF680</Address>
     </CheatEntry>
     <CheatEntry>
       <ID>26</ID>
       <Description>"floatCoord"</Description>
-      <LastState Value="13838" RealAddress="022F5C40"/>
       <VariableType>Float</VariableType>
       <Address>game.dll+1EF5C40</Address>
     </CheatEntry>
     <CheatEntry>
       <ID>27</ID>
       <Description>"floatCoord"</Description>
-      <LastState Value="13838" RealAddress="02312260"/>
       <VariableType>Float</VariableType>
       <Address>game.dll+1F12260</Address>
     </CheatEntry>
     <CheatEntry>
       <ID>28</ID>
       <Description>"No description"</Description>
-      <LastState Value="9460301" RealAddress="00400000"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>4 Bytes</VariableType>
       <Address>getAddress('game.dll')</Address>
@@ -139,7 +128,6 @@
     <CheatEntry>
       <ID>30</ID>
       <Description>"Jumping"</Description>
-      <LastState Value="0" RealAddress="0D1D8A60"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Byte</VariableType>
       <Address>0D1D8A60</Address>
@@ -147,7 +135,6 @@
     <CheatEntry>
       <ID>31</ID>
       <Description>"AUTORUN"</Description>
-      <LastState Value="0" RealAddress="01049898"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Byte</VariableType>
       <Address>01049898</Address>
@@ -162,7 +149,6 @@
     <CheatEntry>
       <ID>33</ID>
       <Description>"E/W Warp Pointer (x)"</Description>
-      <LastState Value="562702" RealAddress="05340118"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Float</VariableType>
       <Address>104a7fc</Address>
@@ -173,7 +159,6 @@
     <CheatEntry>
       <ID>40</ID>
       <Description>"Heading Pointer"</Description>
-      <LastState Value="2405" RealAddress="0534011C"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>2 Bytes</VariableType>
       <Address>104a7fc</Address>
@@ -184,7 +169,6 @@
     <CheatEntry>
       <ID>38</ID>
       <Description>"Run Speed Pointer (not writable)"</Description>
-      <LastState Value="0" RealAddress="05340144"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>2 Bytes</VariableType>
       <Address>104a7fc</Address>
@@ -195,7 +179,6 @@
     <CheatEntry>
       <ID>34</ID>
       <Description>"N/S Warp Pointer (y)"</Description>
-      <LastState Value="510576" RealAddress="05340164"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Float</VariableType>
       <Address>104a7fc</Address>
@@ -206,7 +189,6 @@
     <CheatEntry>
       <ID>43</ID>
       <Description>"Height Warp Pointer (z)"</Description>
-      <LastState Value="7177" RealAddress="05340171"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>2 Bytes</VariableType>
       <Address>104a7fc</Address>
@@ -217,7 +199,6 @@
     <CheatEntry>
       <ID>36</ID>
       <Description>"CameraAngle"</Description>
-      <LastState Value="111" RealAddress="0D1D8A84"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>Byte</VariableType>
       <Address>0D1D8A84</Address>
@@ -225,7 +206,6 @@
     <CheatEntry>
       <ID>41</ID>
       <Description>"loc string buffer"</Description>
-      <LastState RealAddress="00F967A0"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>String</VariableType>
       <Length>10</Length>
@@ -237,7 +217,6 @@
     <CheatEntry>
       <ID>42</ID>
       <Description>"No description"</Description>
-      <LastState Value="7177" RealAddress="05340171"/>
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>2 Bytes</VariableType>
       <Address>05340171</Address>

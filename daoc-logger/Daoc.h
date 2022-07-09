@@ -6,7 +6,7 @@ typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD
 _SendPacket Send;// = (_SendPacket)0x4281df;
 
 typedef void(__cdecl* _SellRequest)(int slotNum);
-_SellRequest SellRequest;// = (_SendPacket)0x4281df;
+_SellRequest SellRequest;// = (_SendPacket)0x42b2e3;
 
 
 wchar_t moduleName[] = L"game.dll";
@@ -61,7 +61,7 @@ void printRecvBufferToLog();
 int runSpeedHookLen = 8;
 const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
 const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
-DWORD newRunspeed;
+DWORD newRunspeed = 0xEE;
 bool changeRunSpeed = false;
 
 //autorun pattern
@@ -79,13 +79,12 @@ struct playerpos_t {
     unsigned char unknown[68];
     float pos_y;
     unsigned char unknown2[8];
-    char unknown3;
-    uint16_t pos_z;
+    float pos_z;
     char unknown4;
 };
 
 DWORD playerPositionPtr;
-playerpos_t* playerPosition;
+playerpos_t* playerPosition = NULL;
 
 
 //Packet item filter
@@ -144,7 +143,7 @@ void __declspec(naked) recvHookFunc() {
         //mov recvBuffer, ebx
     }
 
-    receiveBuffer = moduleBase + 0xC477BA;
+    receiveBuffer = moduleBase + 0xC477BA; // we probably need to read this value from the stack
     recvBuffer = (unsigned char*)receiveBuffer;
 
     if (logRecvHook) {
@@ -175,7 +174,6 @@ void __declspec(naked) runSpeedHookFunc() {
         mov playerPositionPtr, eax
     }
 
-    //this causes
     playerPosition = (playerpos_t*)playerPositionPtr;
 
     if (changeRunSpeed) {
