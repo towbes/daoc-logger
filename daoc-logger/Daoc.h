@@ -233,14 +233,14 @@ recvBuffer[32] = Start of string for item name
 */
 
 std::set<int> badItemIdList{ 
-    13474,	//Item Name - Ancient Troll Blood
-    13462,  //Item name - Enriched quicksilver
-    13485,  //Item name - Ancient necrotic brain fluid
-    13466,	//Item Name - Ancient Mirror
-    13470,	//Item Name - Ancient Pure Mercury
-    13483,	//Item Name - Ancient Lich Tooth
-    13478,	//Item Name - Ancient Giant Blood
-    13482,  //ItemName - Ancient Crushed Focus Stone
+    //13474,	//Item Name - Ancient Troll Blood
+    //13462,  //Item name - Enriched quicksilver
+    //13485,  //Item name - Ancient necrotic brain fluid
+    //13466,	//Item Name - Ancient Mirror
+    //13470,	//Item Name - Ancient Pure Mercury
+    //13483,	//Item Name - Ancient Lich Tooth
+    //13478,	//Item Name - Ancient Giant Blood
+    //13482,  //ItemName - Ancient Crushed Focus Stone
     59060,	//Item Name - Perfected Armor Pattern
     6267,	//Item Name - uminescent Exeregum Stone
     6266,	//Item Name - Luminescent Exerpise Stone
@@ -298,14 +298,16 @@ void p_filterItems()
         int slotId = recvBuffer[7];
         int itemId = recvBuffer[8] << 8 | recvBuffer[9];
         //m_readSlot(slotId);
-        printf("Incoming Item to slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
+        //printf("Incoming Item to slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
         //print the chars
         for (unsigned int i = 32; i < recvLen; i++) {
             std::cout << recvBuffer[i];
         }
         printf("\n");
-        if (badItemIdList.find(itemId) != badItemIdList.end() && m_readItemId(slotId) == itemId) {
+        Sleep(50);
+        if (badItemIdList.find(itemId) != badItemIdList.end()) {
         //if (goodItemIdList.find(itemId) == goodItemIdList.end() && m_readItemId(slotId) == itemId) {
+            printf("Dropping slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
             MoveItem(1, slotId, 0);
         }
     }

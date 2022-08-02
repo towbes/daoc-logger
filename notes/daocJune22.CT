@@ -190,10 +190,10 @@
       <ID>43</ID>
       <Description>"Height Warp Pointer (z)"</Description>
       <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>2 Bytes</VariableType>
+      <VariableType>Float</VariableType>
       <Address>104a7fc</Address>
       <Offsets>
-        <Offset>59</Offset>
+        <Offset>58</Offset>
       </Offsets>
     </CheatEntry>
     <CheatEntry>

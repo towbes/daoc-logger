@@ -1,0 +1,9 @@
+objId name                                tag                            lvl hlth zone      X      Y     Z zoneX zoneY zoneZ  head speed realm tgtId latId f1 f2 f3 flags                specialMob
+   2A Necromancer Janus                   High Lord of the Tenebrae       50   83  141  39255 100283 16276 31063 26555 16276  2383     0           0     B  A  0  0                      
+   EF freezing ground                                                     50  100  141  39166 100632 16465 30974 26904 16465    56     0           0     B 10  3  0 noTarget noAttack    
+   2B Janus Haze                                                          99  100  141  39606  99935 16464 31414 26207 16464  2036     0           0     0 18  3  0 noTarget noAttack    
+   5E Janus Haze                                                          99  100  141  39203  99348 16211 31011 25620 16211  2036     0           0     0 18  3  0 noTarget noAttack    
+   61 Janus Haze                                                          99  100  141  38805  99926 16464 30613 26198 16464  2036     0           0     0 18  3  0 noTarget noAttack    
+   65 Janus Haze                                                          99  100  141  38967  99351 16215 30775 25623 16215  2036     0           0     0 18  3  0 noTarget noAttack    
+   69 Janus Haze                                                          99  100  141  39418  99346 16214 31226 25618 16214  2036     0           0     0 18  3  0 noTarget noAttack    
+   EB freezing ground                                                     50  100  141  39024 100035 16214 30832 26307 16214  3970     0           0     9 10  3  0 noTarget noAttack    

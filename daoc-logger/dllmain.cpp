@@ -6,10 +6,11 @@
 #include "Scan.h"
 #include <algorithm>
 #include <vector>
-#include "commctrl.h"
-#include "PacketProcessor.h"
 #include <thread>
 #include <chrono>
+#include "commctrl.h"
+#include "PacketProcessor.h"
+
 #include "mem.h"
 
 #define MYMENU_EXIT (WM_APP + 100)

@@ -1,0 +1,8 @@
+Use https://www.boost.org/doc/libs/1_74_0/doc/html/interprocess/quick_guide.html
+
+Have each injected DLL create it's own shared memory segment that the main GUI will also open a handle to.
+
+start by just trying to player information across it.
+
+
+- Need to implement a command handler in the DLL, have it read from a portion of the shared segment to know when to do something, would it be better to just use a socket for this part?
