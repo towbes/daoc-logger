@@ -1,6 +1,8 @@
 # daoc-logger
 Logging DLL for DAOC
 
+Thank you to the Dawn Of Light emulator developers for the hard work in reversing packets: https://github.com/Dawn-of-Light/DOLSharp
+
 Huge thanks to erarnitox for the great walkthrough posted on GuidedHacking.com! https://guidedhacking.com/threads/how-to-make-an-mmo-bot-mmorpg-bot-automation.15173/
 
 You can see their repository for Tera Proxy on github here: https://github.com/Erarnitox/TeraProxy
