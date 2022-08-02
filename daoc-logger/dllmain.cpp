@@ -469,8 +469,8 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     HWND hGoButton;
     
     RegisterDLLWindowClass(L"InjectedDLLWindowClass");
-    HWND hwnd = CreateWindowEx(0, L"InjectedDLLWindowClass", L"Erarnitox's Tera Proxy | GuidedHacking.com", WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 1020, 1085, NULL, hMenu, inj_hModule, NULL);
-    hLog = CreateWindowEx(0, L"edit", L"Tera Proxy made by Erarnitox\r\n!!! visit GuidedHacking.com !!!", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | WS_BORDER | ES_READONLY, 5, 5, 1005, 700, hwnd, NULL, hModule, NULL);
+    HWND hwnd = CreateWindowEx(0, L"InjectedDLLWindowClass", L"DAOC-Logger and Tools| Based on code from GuidedHacking.com", WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 1020, 1085, NULL, hMenu, inj_hModule, NULL);
+    hLog = CreateWindowEx(0, L"edit", L"DAOC-Logger and Tools - Based on Tera Proxy made by Erarnitox", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | WS_BORDER | ES_READONLY, 5, 5, 1005, 700, hwnd, NULL, hModule, NULL);
 
     hClearButton = CreateWindowEx(0, L"button", L"Clear Log", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 710, 100, 30, hwnd, (HMENU)CLEAR_BUTTON, hModule, NULL);
     hCleanItemButton = CreateWindowEx(0, L"button", L"Clean Items", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 750, 100, 30, hwnd, (HMENU)CLEANITEM_BUTTON, hModule, NULL);
