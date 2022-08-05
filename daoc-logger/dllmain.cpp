@@ -406,6 +406,21 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //uintptr_t pebAddress = __readfsdword(0x30);
     //Patch((char*)pebAddress + 0x2, (char*)"\x0", 1);
 
+    char* name = (char*)(moduleBase + 0xc4a6a8);
+    std::cout << "Server name is: " << name[0] << std::endl;
+    if (name[0] != 'G') {
+        std::getchar();
+#ifdef _DEBUG
+        if (f != 0) {
+            fclose(f);
+        }
+        FreeConsole();
+#endif 
+        
+        FreeConsole();
+        FreeLibraryAndExitThread(hModule, 0);
+        return 0;
+    }
 
     //Send hook
     Send = (_SendPacket)(ScanModIn((char*)internalSendPattern, (char*)internalSendMask, "game.dll"));

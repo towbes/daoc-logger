@@ -5,3 +5,7 @@ Design Notes / To do
 
 - Auto accept group invites
 - Move to location x,y
+
+
+
+- Lock to gaheris and pendragon

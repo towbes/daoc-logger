@@ -11,6 +11,8 @@ _SellRequest SellRequest;// = (_SendPacket)0x42b2e3;
 
 wchar_t moduleName[] = L"game.dll";
 
+//server name @ 0xc4a6a8
+
 //Module base address
 uintptr_t moduleBase;
 
