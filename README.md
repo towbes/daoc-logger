@@ -1,5 +1,5 @@
 # daoc-logger
-Logging DLL for DAOC
+Logging DLL for DAOC.  This only works on the Gaheris server
 
 Thank you to the Dawn Of Light emulator developers for the hard work in reversing packets: https://github.com/Dawn-of-Light/DOLSharp
 
