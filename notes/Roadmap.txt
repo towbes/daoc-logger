@@ -9,3 +9,10 @@ Design Notes / To do
 
 
 - Lock to gaheris and pendragon
+
+
+[6:30 PM] atom0s (Wiccaan): If you are injecting, then you don't really need a second DLL. Just the GUI app and a single DLL injected into each process should be plenty.
+[6:30 PM] atom0s (Wiccaan): Then you'd setup some form of IPC for the DLL and app to communicate. Be it something like using MMF's, sockets, slots, general window messages, etc.
+[6:30 PM] atom0s (Wiccaan): (I don't recommend named pipes.)
+[6:32 PM] atom0s (Wiccaan): In regards to say using MMFs, then you can use a 'known' prefix and a usable suffix to create unique handles for each instance. Such as my_mmf_prefix_1234 where 1234 is the process id the dll was injected into.
+[6:34 PM] atom0s (Wiccaan): That would allow both the UI app and DLL to know how to talk to each other in some manner. (It'd be up to you to design how the MMF(s) are used/laid out for swapping data between them.

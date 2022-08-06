@@ -2,7 +2,17 @@
 <CheatTable CheatEngineTableVersion="42">
   <CheatEntries>
     <CheatEntry>
-      <ID>0</ID>
+      <ID>1</ID>
+      <Description>"Server Name"</Description>
+      <VariableType>String</VariableType>
+      <Length>7</Length>
+      <Unicode>0</Unicode>
+      <CodePage>0</CodePage>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>game.dll+C4A6A8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
       <Description>"Some kind of tick counter?"</Description>
       <ShowAsHex>1</ShowAsHex>
       <ShowAsSigned>0</ShowAsSigned>
@@ -10,7 +20,7 @@
       <Address>game.dll+C47794</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>2</ID>
+      <ID>3</ID>
       <Description>"static pointer"</Description>
       <ShowAsHex>1</ShowAsHex>
       <ShowAsSigned>0</ShowAsSigned>
@@ -24,74 +34,6 @@
       <ShowAsSigned>0</ShowAsSigned>
       <VariableType>4 Bytes</VariableType>
       <Address>009466F4+8</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>5</ID>
-      <Description>"Player Location Information E and W"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+5aBAA8</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>6</ID>
-      <Description>"Player location information N and S"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+5abaac</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>7</ID>
-      <Description>"player location information up and down"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+5abab0</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>8</ID>
-      <Description>"movement speed"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+5abab8</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>9</ID>
-      <Description>"WARPS E W Writes to the EW player info above"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+c4a828</Address>
-      <Offsets>
-        <Offset>48</Offset>
-      </Offsets>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>10</ID>
-      <Description>"Warps N and S"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+c4a828</Address>
-      <Offsets>
-        <Offset>54</Offset>
-      </Offsets>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>11</ID>
-      <Description>"Warps up and down"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+c4a828</Address>
-      <Offsets>
-        <Offset>3C</Offset>
-      </Offsets>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>12</ID>
-      <Description>"Makes character autorun can set high speed"</Description>
-      <ShowAsSigned>0</ShowAsSigned>
-      <VariableType>Float</VariableType>
-      <Address>game.dll+c4a828</Address>
-      <Offsets>
-        <Offset>34</Offset>
-      </Offsets>
     </CheatEntry>
     <CheatEntry>
       <ID>25</ID>
