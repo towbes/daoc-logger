@@ -409,7 +409,6 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     char* name = (char*)(moduleBase + 0xc4a6a8);
     std::cout << "Server name is: " << name[0] << std::endl;
     if (name[0] != 'G' || name[0] != 'D') {
-        std::getchar();
 #ifdef _DEBUG
         if (f != 0) {
             fclose(f);
