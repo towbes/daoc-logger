@@ -1,0 +1,11 @@
+FDD300 - Buff0 (168 bytes)
+Buff {
+	char[72] buffName;
+	int buffSlot;
+	int tooltipID;
+	char[20] unknown;
+	int spellID;
+	char[64] unknown2;
+}
+
+How many buff slots are there?
