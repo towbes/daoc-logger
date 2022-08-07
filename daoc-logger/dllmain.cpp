@@ -557,7 +557,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
 
     while (GetMessage(&messages, NULL, 0, 0)){
-        if (GetAsyncKeyState(VK_END) & 1) {
+        if (GetAsyncKeyState(VK_RWIN) & 1) {
             break;
         }
         TranslateMessage(&messages);
