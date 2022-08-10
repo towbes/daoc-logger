@@ -471,7 +471,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
     //Hook* sendHook = new Hook((void*)Send, (void*)sendHookFunc, sendHookLen);
     //Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
-    //Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
+    Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
 
 #ifdef _DEBUG
     std::cout << "[Player Position Pointer:] 0x" << std::hex << (int)playerPosition << std::endl;
@@ -576,7 +576,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     
     //delete sendHook;
     //delete recvHook;
-    //delete runSpeedHook;
+    delete runSpeedHook;
     
 
 #ifdef _DEBUG
