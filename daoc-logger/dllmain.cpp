@@ -429,6 +429,12 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     void* toHookRecv = (void*)(ScanModIn((char*)internalRecvPattern, (char*)internalRecvMask, "game.dll"));
     //Runspeed Hook
     void* toHookRunSpeed = (void*)(ScanModIn((char*)runSpeedPattern, (char*)runSpeedMask, "game.dll"));
+    //Player position
+    void* ptrPlayerPosition = (void*)(ScanModIn((char*)ptrPlayerPositionPattern, (char*)ptrPlayerPositionMask, "game.dll"));
+    DWORD ptrPlayerPositionLocation = (DWORD)((size_t)ptrPlayerPosition + 0x2);
+    void* playerPositionPtr = *(void**)ptrPlayerPositionLocation;
+    playerPosition = *(playerpos_t**)playerPositionPtr;
+
     //Autorun Hook
     void* autorunPtr = (void*)(ScanModIn((char*)autorunPattern, (char*)autorunMask, "game.dll"));
     void* autorunTogglePtr = (void*)((size_t)autorunPtr + 2);
@@ -443,7 +449,8 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "send function location:" << std::hex << (int)Send << std::endl;
     std::cout << "recv function location:" << std::hex << (int)toHookRecv << std::endl;
     std::cout << "Sell request location:" << std::hex << (int)SellRequest << std::endl;
-    std::cout << "runspeed function location:" << std::hex << (int)toHookRunSpeed << std::endl << std::endl;
+    std::cout << "runspeed function location:" << std::hex << (int)toHookRunSpeed << std::endl;
+    std::cout << "Player position location:" << std::hex << (int)playerPosition << std::endl << std::endl;
     //std::cout << "autorunPtr location:" << std::hex << (int)autorunPtr << std::endl;
     //std::cout << "autorunTogglePtr: " << std::hex << (int)autorunTogglePtr << std::endl;
     std::cout << "autorunTogglePtr2: " << std::hex << (int)autorunTogglePtr2 << std::endl << std::endl;
@@ -463,12 +470,12 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 #endif
 
     //Hook* sendHook = new Hook((void*)Send, (void*)sendHookFunc, sendHookLen);
-    Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
-    Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
+    //Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
+    //Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
 
 #ifdef _DEBUG
-    std::cout << "[Player Position Pointer:] 0x" << std::hex << playerPositionPtr << std::endl;
-    if (playerPositionPtr > 0) {
+    std::cout << "[Player Position Pointer:] 0x" << std::hex << (int)playerPosition << std::endl;
+    if (ptrPlayerPositionLocation > 0) {
         std::cout << "[Player Position X:] " << std::setprecision(5) << playerPosition->pos_x << std::endl;
     }
 #endif
@@ -568,8 +575,8 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //exit:
     
     //delete sendHook;
-    delete recvHook;
-    delete runSpeedHook;
+    //delete recvHook;
+    //delete runSpeedHook;
     
 
 #ifdef _DEBUG

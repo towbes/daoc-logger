@@ -61,15 +61,26 @@ void printRecvBufferToLog();
 //func loc is 438db7 on 7/4/2022
 //Player position pointer is at [ebx - 0x2C] from this instruction
 int runSpeedHookLen = 8;
-const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
-const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
+//const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
+//const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
+
+//Address of signature = game.dll + 0x00040414
+const char* runSpeedPattern = "\x55\x8B\xEC\x83\xEC\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x56\x8B\x75";
+const char* runSpeedMask = "xxxxx?x????????xxx";
 DWORD newRunspeed = 0xEE;
 bool changeRunSpeed = false;
+
+//Player position struct pointer
+//Address of signature = game.dll + 0x000418CD , address at +0x2 offset
+const char* ptrPlayerPositionPattern = "\x89\x3D\x00\x00\x00\x00\xF3";
+const char* ptrPlayerPositionMask = "xx????x";
 
 //autorun pattern
 const char* autorunPattern = "\x39\x3D\x00\x00\x00\x00\x75\x00\x39\x3D\x00\x00\x00\x00\x75";
 const char* autorunMask = "xx????x?xx????x";
 BYTE autorunToggle;
+
+
 
 //Sell Request pattern
 const char* sellRequestPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x56\x8B\x35\x00\x00\x00\x00\xD9\x06\xE8\x00\x00\x00\x00\xD9\x46\x00\x89\x45\x00\xE8\x00\x00\x00\x00\x89\x45\x00\x6A\x00\x58\xE8\x00\x00\x00\x00\x66\x89\x00\x00\x66\x8B\x00\x00\x8D\x75\x00\x66\x89\x00\x00\xE8\x00\x00\x00\x00\x6A\x00\x6A\x00\x8B\xC6\x6A";
@@ -172,11 +183,11 @@ void __declspec(naked) runSpeedHookFunc() {
         pushad
         //get the player position ptr out of ebx-0x2c
         //Have to move forward at least once after loading to trigger this load
-        mov eax, [ebx - 0x2c]
-        mov playerPositionPtr, eax
+        //mov eax, [ebx - 0x2c]
+        //mov playerPositionPtr, eax
     }
 
-    playerPosition = (playerpos_t*)playerPositionPtr;
+    //playerPosition = (playerpos_t*)playerPositionPtr;
 
     if (changeRunSpeed) {
         //new runspeed is set in dllmain.cpp
