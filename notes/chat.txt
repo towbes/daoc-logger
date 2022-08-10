@@ -1,1 +1,3 @@
 Example of macroquest chat hook: https://github.com/macroquest/macroquest/blob/master/src/main/MQ2CommandAPI.cpp
+
+https://github.com/macroquest/macroquest/blob/master/src/main/MQ2ChatHook.cpp
