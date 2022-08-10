@@ -61,12 +61,9 @@ void printRecvBufferToLog();
 //func loc is 438db7 on 7/4/2022
 //Player position pointer is at [ebx - 0x2C] from this instruction
 int runSpeedHookLen = 8;
-//const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
-//const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
+const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
+const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
 
-//Address of signature = game.dll + 0x00040414
-const char* runSpeedPattern = "\x55\x8B\xEC\x83\xEC\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x56\x8B\x75";
-const char* runSpeedMask = "xxxxx?x????????xxx";
 DWORD newRunspeed = 0xEE;
 bool changeRunSpeed = false;
 
@@ -181,13 +178,8 @@ DWORD jmpBackAddrRunSpeed;
 void __declspec(naked) runSpeedHookFunc() {
     __asm {
         pushad
-        //get the player position ptr out of ebx-0x2c
-        //Have to move forward at least once after loading to trigger this load
-        //mov eax, [ebx - 0x2c]
-        //mov playerPositionPtr, eax
     }
 
-    //playerPosition = (playerpos_t*)playerPositionPtr;
 
     if (changeRunSpeed) {
         //new runspeed is set in dllmain.cpp
