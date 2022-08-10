@@ -1,0 +1,1 @@
+Example of macroquest chat hook: https://github.com/macroquest/macroquest2/blob/678c51b638bab24c15533bf829bfab19eae9f5e0/MQ2Main/MQ2CommandAPI.cpp

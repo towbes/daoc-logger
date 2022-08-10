@@ -462,7 +462,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "[RunSpeed Jump Back Addy:] 0x" << std::hex << jmpBackAddrRunSpeed << std::endl;
 #endif
 
-    Hook* sendHook = new Hook((void*)Send, (void*)sendHookFunc, sendHookLen);
+    //Hook* sendHook = new Hook((void*)Send, (void*)sendHookFunc, sendHookLen);
     Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
     Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
 
@@ -566,8 +566,9 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
 
     //exit:
+    
+    //delete sendHook;
     delete recvHook;
-    delete sendHook;
     delete runSpeedHook;
     
 

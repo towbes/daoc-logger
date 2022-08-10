@@ -77,7 +77,7 @@ const char* sellRequestMask = "xxxxx?xxxxxx?x?xxx????xxx????xx?xx?x????xx?x?xx??
 
 struct playerpos_t {
     float pos_x;
-    int heading;
+    short heading;
     unsigned char unknown[68];
     float pos_y;
     unsigned char unknown2[8];
