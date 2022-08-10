@@ -57,14 +57,18 @@ bool logRecvHook = false;
 void printRecvBufferToLog();
 
 
-//Hook beginning of run speed function, replace first value on stack with desired run speed
-int runSpeedHookLen = 6;
+//Hook right after run speed function, replace EAX with desired run speed
+//func loc is 438db7 on 7/4/2022
+//Player position pointer is at [ebx - 0x2C] from this instruction
+int runSpeedHookLen = 8;
+//const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
+//const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
+
 //Address of signature = game.dll + 0x00040414
 const char* runSpeedPattern = "\x55\x8B\xEC\x83\xEC\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x56\x8B\x75";
 const char* runSpeedMask = "xxxxx?x????????xxx";
 DWORD newRunspeed = 0xEE;
 bool changeRunSpeed = false;
-
 
 //Player position struct pointer
 //Address of signature = game.dll + 0x000418CD , address at +0x2 offset
@@ -177,9 +181,11 @@ DWORD jmpBackAddrRunSpeed;
 void __declspec(naked) runSpeedHookFunc() {
     __asm {
         pushad
+        //get the player position ptr out of ebx-0x2c
+        //Have to move forward at least once after loading to trigger this load
+        //mov eax, [ebx - 0x2c]
+        //mov playerPositionPtr, eax
     }
-
-
 
     //playerPosition = (playerpos_t*)playerPositionPtr;
 
@@ -187,19 +193,12 @@ void __declspec(naked) runSpeedHookFunc() {
         //new runspeed is set in dllmain.cpp
         __asm {
             popad
-            //pop top of stack which is return pointer
-            pop eax
-            //skip the next 4 bytes of stack which is the runspeed bonus
-            add esp, 4
-            //push new run speed
-            push newRunspeed
-            //push memory address back onto the stack
-            push eax
-
+            //move run speed into eax
+            mov eax, newRunspeed
             //instructions we overwrote
-            push ebp
-            mov ebp, esp
-            sub esp, 0x10
+            mov edx, eax
+            mov[ebp - 0x10], edx
+            fild dword ptr[ebp - 0x10]
             jmp[jmpBackAddrRunSpeed]
         }
     }
@@ -207,9 +206,9 @@ void __declspec(naked) runSpeedHookFunc() {
         __asm {
             popad
             //instructions we overwrote
-            push ebp
-            mov ebp, esp
-            sub esp, 0x10
+            mov edx, eax
+            mov[ebp - 0x10], edx
+            fild dword ptr[ebp - 0x10]
             jmp[jmpBackAddrRunSpeed]
         }
     }
