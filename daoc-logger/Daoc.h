@@ -8,6 +8,65 @@ _SendPacket Send;// = (_SendPacket)0x4281df;
 typedef void(__cdecl* _SellRequest)(int slotNum);
 _SellRequest SellRequest;// = (_SendPacket)0x42b2e3;
 
+//Each entity is 0x19B8 long?
+//Total length of entity list (0x19b8 * 2000): 0xC8ED80
+typedef uintptr_t(__fastcall* _GetEntityPointer)(int entityOffset);
+_GetEntityPointer GetEntityPointer = (_GetEntityPointer)0x43589f;
+
+//Sanity checker before calling GetEntityPointer
+typedef char(__fastcall* _EntityPtrSanityCheck)(int entityListOffset);
+_EntityPtrSanityCheck EntityPtrSanityCheck = (_EntityPtrSanityCheck)0x4358bf;
+int preCheck = *(int*)0xaa4c5c;
+int entityListOffset;
+
+typedef int(__cdecl* _getEntityOffsetFromOid)(int objectId);
+_getEntityOffsetFromOid GetEntityOffsetFromOid = (_getEntityOffsetFromOid)0x411721;
+
+//EntityUpdate Loop hook
+//Address of signature = game.dll + 0x00017DD6
+//0x417dd6
+const char* entityLoopPattern = "\x3B\x3D\x00\x00\x00\x00\x0F\x8C\x00\x00\x00\x00\x5F";
+const char* entityLoopMask = "xx????xx????x";
+int entityLoopHookLen = 6;
+
+int objectId;
+int EntityOidList[2000];
+uintptr_t entityPtr;
+char sanityCheck;
+unsigned char* ptrEntityChar;
+DWORD jmpBackAddrEntity;
+
+unsigned char* EntityList[2000];
+uintptr_t tempAddress;
+int entityOffset;
+
+//EntityUpdateLoopHook
+#define cmp_edi __asm _emit 0x3B __asm _emit 0x3D __asm _emit 0x5C __asm _emit 0x4C __asm _emit 0xAA __asm _emit 0x00
+void __declspec(naked) entityLoopFunc() {
+    __asm {
+        pushad
+        pushf
+        mov tempAddress, esi
+        mov entityOffset, edi
+    }
+
+    entityOffset -= 1;
+
+    if (entityOffset > -1 && entityOffset < 2000) {
+        EntityList[(int)entityOffset] = (unsigned char*)tempAddress;
+    }
+
+    tempAddress = 0;
+    __asm {
+        popf
+        popad
+        //instructions we overwrote
+        cmp_edi
+        jmp[jmpBackAddrEntity]
+    }
+}
+
+
 
 wchar_t moduleName[] = L"game.dll";
 

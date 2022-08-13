@@ -74,7 +74,8 @@ std::vector<char> logText;
 //uintptr_t moduleBase;
 //HMODULE kernel32base;
 
-
+//stores object id to pass to GetEntityPointer
+wchar_t strObjectId[10];
 
 
 
@@ -270,8 +271,85 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
         case CLEAR_BUTTON:
             logText.erase(logText.begin(), logText.end());
             SetWindowTextA(hLog, "Cleared! :)\r\nFind Tutorials on Guidedhacking.com!");
-        //case GO_POS:
+            break;
+        case GO_POS:
+            //hijacked for temporary test of entity test
+            // 
+            // offset from OID
+            entityPtr = NULL;
+            GetWindowText(hDlgNewPosHeading, strObjectId, 10);
+            //objectId = 9256;
+            entityListOffset = 0;
+            entityListOffset = GetEntityOffsetFromOid(_wtoi(strObjectId));
+            
+            if (entityListOffset != 0) {
 
+                std::cout << "Entity offset: " << std::hex << (uintptr_t)entityListOffset << std::endl;
+            }
+            //reset the strObjectId buffer
+            for (int i = 0; i < 10; i++) {
+                strObjectId[i] = '\0';
+            }
+
+            for (int i = 0; i < 2000; i++) {
+                if (EntityList[i] != 0) {
+                    unsigned char* tempPtr = EntityList[i];
+                    tempPtr += 0x23c;
+                    std::cout << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
+                }
+            }
+            //Fill entity list
+            // 
+            //std::cout << "Current max: " << (int)preCheck << std::endl;
+            //for (entityListOffset = 0; entityListOffset < 10; entityListOffset++) {
+            //    entityPtr = NULL;
+            //    sanityCheck = EntityPtrSanityCheck(entityListOffset);
+            //    if (sanityCheck != '\0') {
+            //        entityPtr = GetEntityPointer(entityListOffset);
+            //        if (entityPtr != NULL) {
+            //            std::cout << "Offset " << entityListOffset << " Address " << std::hex << entityPtr << std::endl;
+            //        }
+            //    }
+            //}
+
+            //crashes
+            //entityListOffset = 0;
+            //if (0 < preCheck) {
+            //    do {
+            //        sanityCheck = EntityPtrSanityCheck(entityListOffset);
+            //        if (sanityCheck != '\0') {
+            //            entityPtr = NULL;
+            //            entityPtr = GetEntityPointer(entityListOffset);
+            //            //ptrEntityChar = reinterpret_cast<unsigned char*>(entityPtr);
+            //            if (entityPtr != NULL && entityPtr != 0) {
+            //                std::cout << "Offset " << entityListOffset << " Address " << std::hex << entityPtr << std::endl;
+            //            }
+            //            //objectId = (int)(ptrEntityChar + 0x23c);
+            //            //if (objectId > 0) {
+            //            //    EntityOidList[i] = objectId;
+            //            //    std::cout << "Offset " << i << " OID " << EntityOidList[i] << std::endl;
+            //            //}
+            //        }
+            //        entityListOffset += 1;
+            //    } while (entityListOffset < preCheck);
+            //
+            //}
+            //
+            // 
+
+            //entityPtr = NULL;
+            //GetWindowText(hDlgNewPosHeading, strObjectId, 10);
+            ////objectId = 9256;
+            //entityPtr = GetEntityPointer(_wtoi(strObjectId));
+            //if (entityPtr != NULL) {
+            //    std::cout << "tempEntity Address: " << std::hex << entityPtr << std::endl;
+            //}
+            ////reset the strObjectId buffer
+            //for (int i = 0; i < 10; i++) {
+            //    strObjectId[i] = '\0';
+            //}
+
+            break;
         }
     }
     return DefWindowProc(hWindow, uMessage, wParam, lParam);
@@ -427,6 +505,10 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     SellRequest = (_SellRequest)(ScanModIn((char*)sellRequestPattern, (char*)sellRequestMask, "game.dll"));
     //Receive hook
     void* toHookRecv = (void*)(ScanModIn((char*)internalRecvPattern, (char*)internalRecvMask, "game.dll"));
+
+    //entity list hook
+    void* toHookEntity = (void*)(ScanModIn((char*)entityLoopPattern, (char*)entityLoopMask, "game.dll"));
+
     //Runspeed Hook
     void* toHookRunSpeed = (void*)(ScanModIn((char*)runSpeedPattern, (char*)runSpeedMask, "game.dll"));
     //Player position
@@ -447,6 +529,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 #ifdef _DEBUG
     std::cout << "module base is:" << std::hex << (int)moduleBase << std::endl;
     std::cout << "send function location:" << std::hex << (int)Send << std::endl;
+    std::cout << "entity function location:" << std::hex << (int)toHookEntity << std::endl;
     std::cout << "recv function location:" << std::hex << (int)toHookRecv << std::endl;
     std::cout << "Sell request location:" << std::hex << (int)SellRequest << std::endl;
     std::cout << "runspeed function location:" << std::hex << (int)toHookRunSpeed << std::endl;
@@ -462,16 +545,19 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     jmpBackAddrSend = (size_t)Send + sendHookLen;
     jmpBackAddrRecv = (size_t)toHookRecv + recvHookLen;
     jmpBackAddrRunSpeed = (size_t)toHookRunSpeed + runSpeedHookLen;
+    jmpBackAddrEntity = (size_t)toHookEntity + entityLoopHookLen;
 
 #ifdef _DEBUG
     std::cout << "[Send Jump Back Addy:] 0x" << std::hex << jmpBackAddrSend << std::endl;
     std::cout << "[Recv Jump Back Addy:] 0x" << std::hex << jmpBackAddrRecv << std::endl;
     std::cout << "[RunSpeed Jump Back Addy:] 0x" << std::hex << jmpBackAddrRunSpeed << std::endl;
+    std::cout << "[Entity Jump Back Addy:] 0x" << std::hex << jmpBackAddrEntity << std::endl;
 #endif
 
     //Hook* sendHook = new Hook((void*)Send, (void*)sendHookFunc, sendHookLen);
     //Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
     Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
+    Hook* entityLoopHook = new Hook(toHookEntity, entityLoopFunc, entityLoopHookLen);
 
 #ifdef _DEBUG
     std::cout << "[Player Position Pointer:] 0x" << std::hex << (int)playerPosition << std::endl;
@@ -577,6 +663,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //delete sendHook;
     //delete recvHook;
     delete runSpeedHook;
+    delete entityLoopHook;
     
 
 #ifdef _DEBUG
