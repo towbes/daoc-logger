@@ -452,9 +452,9 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "runspeed function location:" << std::hex << (int)toHookRunSpeed << std::endl;
     std::cout << "Player position location:" << std::hex << (int)playerPosition << std::endl << std::endl;
     //std::cout << "autorunPtr location:" << std::hex << (int)autorunPtr << std::endl;
-    //std::cout << "autorunTogglePtr: " << std::hex << (int)autorunTogglePtr << std::endl;
+    std::cout << "autorunTogglePtr: " << std::hex << (int)autorunTogglePtr << std::endl;
     std::cout << "autorunTogglePtr2: " << std::hex << (int)autorunTogglePtr2 << std::endl << std::endl;
-    //std::cout << "autorunToggle value: " << std::hex << (int)autorunToggle << std::endl;
+    std::cout << "autorunToggle value: " << std::hex << (int)autorunToggle << std::endl;
 
     //std::cout << "d3d9 endscene location:" << std::hex << (int)endScenePtr << std::endl;
 #endif // _DEBUG
