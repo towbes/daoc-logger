@@ -19,8 +19,11 @@ _EntityPtrSanityCheck EntityPtrSanityCheck = (_EntityPtrSanityCheck)0x4358bf;
 int preCheck = *(int*)0xaa4c5c;
 int entityListOffset;
 
+//This is for npc / objects only
 typedef int(__cdecl* _getEntityOffsetFromOid)(int objectId);
 _getEntityOffsetFromOid GetEntityOffsetFromOid = (_getEntityOffsetFromOid)0x411721;
+
+//This function is for players: 0x4116ba
 
 //EntityUpdate Loop hook
 //Address of signature = game.dll + 0x00017DD6
