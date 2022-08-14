@@ -10,6 +10,7 @@ _SellRequest SellRequest;// = (_SendPacket)0x42b2e3;
 
 //Each entity is 0x19B8 long?
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
+//Calling this function seems to crash due to race condition sometimes
 typedef uintptr_t(__fastcall* _GetEntityPointer)(int entityOffset);
 _GetEntityPointer GetEntityPointer = (_GetEntityPointer)0x43589f;
 
@@ -20,10 +21,33 @@ int preCheck = *(int*)0xaa4c5c;
 int entityListOffset;
 
 //This is for npc / objects only
-typedef int(__cdecl* _getEntityOffsetFromOid)(int objectId);
-_getEntityOffsetFromOid GetEntityOffsetFromOid = (_getEntityOffsetFromOid)0x411721;
+//Calling this function seems to crash due to race conditions sometimes
+typedef int(__cdecl* _getNPCEntityOffsetFromOid)(int objectId);
+_getNPCEntityOffsetFromOid GetNPCEntityOffsetFromOid = (_getNPCEntityOffsetFromOid)0x411721;
 
 //This function is for players: 0x4116ba
+//Calling this function seems to crash due to race condition sometimes
+typedef int(__cdecl* _getPlyrEntityOffsetFromListIndex)(int sessionId);
+_getPlyrEntityOffsetFromListIndex GetPlyrEntityOffsetFromListIndex = (_getPlyrEntityOffsetFromListIndex)0x4116ba;
+
+//Mid fun Hook at 0x411e2f - Entity Pointer in EAX, player list index in ESI
+//Address of signature = game.dll + 0x00011E2F
+const char* plyrEntityLoopPattern = "\xFF\x75\x00\x8B\xF0\xE8\x00\x00\x00\x00\x89\x45";
+const char* plyrEntityLoopMask = "xx?xxx????xx";
+int plyrEntityHookLen = 5;
+
+//Entity global variables/lists
+int objectId;
+unsigned char* ptrEntityChar;
+DWORD jmpBackAddrEntity;
+
+unsigned char* EntityList[2000];
+//This list starts at index = 2
+int playerEntityList[1003];
+uintptr_t tempAddress;
+int entityOffset;
+int npcEntityListOffset;
+int plyrEntityListOffset;
 
 //EntityUpdate Loop hook
 //Address of signature = game.dll + 0x00017DD6
@@ -32,16 +56,36 @@ const char* entityLoopPattern = "\x3B\x3D\x00\x00\x00\x00\x0F\x8C\x00\x00\x00\x0
 const char* entityLoopMask = "xx????xx????x";
 int entityLoopHookLen = 6;
 
-int objectId;
-int EntityOidList[2000];
-uintptr_t entityPtr;
-char sanityCheck;
-unsigned char* ptrEntityChar;
-DWORD jmpBackAddrEntity;
+bool findEntityByOffset(int offset) {
+    for (int i = 0; i < 2000; i++) {
+        if ((int)EntityList[i] == 0) {
+            return false;
+        }
+        if (offset == (int)EntityList[i]) {
+            unsigned char* tempPtr = EntityList[i];
+            tempPtr += 0x23c;
+            std::cout << "Player Offset " << offset << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
 
-unsigned char* EntityList[2000];
-uintptr_t tempAddress;
-int entityOffset;
+bool findEntityByOid(short oid) {
+    for (int i = 0; i < 2000; i++) {
+        if ((int)EntityList[i] == 0) {
+            return false;
+        }
+        unsigned char* tempPtr = EntityList[i];
+        tempPtr += 0x23c;
+        if (oid == *(uint16_t*)tempPtr) {
+
+            std::cout << "Entity Offset: " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
 
 //EntityUpdateLoopHook
 #define cmp_edi __asm _emit 0x3B __asm _emit 0x3D __asm _emit 0x5C __asm _emit 0x4C __asm _emit 0xAA __asm _emit 0x00
@@ -54,6 +98,7 @@ void __declspec(naked) entityLoopFunc() {
     }
 
     entityOffset -= 1;
+
 
     if (entityOffset > -1 && entityOffset < 2000) {
         EntityList[(int)entityOffset] = (unsigned char*)tempAddress;

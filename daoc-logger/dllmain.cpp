@@ -24,6 +24,9 @@
 #define TOGGLE_RUNSPEED (WM_APP + 108)
 #define CMB_SPEED (WM_APP + 109)
 #define GO_POS (WM_APP + 110)
+#define ENT_LIST (WM_APP + 111)
+#define PLYR_OFFSET (WM_APP + 112)
+#define NPC_OFFSET (WM_APP + 113)
 
 HMODULE inj_hModule;
 HWND hCraftedPacket;
@@ -59,7 +62,11 @@ HWND hDlgNewPosY;
 HWND hDlgNewPosZ;
 HWND hDlgNewPosHeading;
 
-
+HWND hDlgPlyrOid;
+HWND hDlgNPCOid;
+HWND hEntButton;
+HWND hPlyrOffset;
+HWND hNPCOffset;
 
 wchar_t craftedBuffer[533];
 char bufferToSend[533];
@@ -75,7 +82,8 @@ std::vector<char> logText;
 //HMODULE kernel32base;
 
 //stores object id to pass to GetEntityPointer
-wchar_t strObjectId[10];
+wchar_t strNPCObjectId[10];
+wchar_t strPlyrObjectId[10];
 
 
 
@@ -273,24 +281,11 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             SetWindowTextA(hLog, "Cleared! :)\r\nFind Tutorials on Guidedhacking.com!");
             break;
         case GO_POS:
+            break;
+
+        case ENT_LIST:
             //hijacked for temporary test of entity test
-            // 
-            // offset from OID
-            entityPtr = NULL;
-            GetWindowText(hDlgNewPosHeading, strObjectId, 10);
-            //objectId = 9256;
-            entityListOffset = 0;
-            entityListOffset = GetEntityOffsetFromOid(_wtoi(strObjectId));
-            
-            if (entityListOffset != 0) {
-
-                std::cout << "Entity offset: " << std::hex << (uintptr_t)entityListOffset << std::endl;
-            }
-            //reset the strObjectId buffer
-            for (int i = 0; i < 10; i++) {
-                strObjectId[i] = '\0';
-            }
-
+            //
             for (int i = 0; i < 2000; i++) {
                 if (EntityList[i] != 0) {
                     unsigned char* tempPtr = EntityList[i];
@@ -298,57 +293,57 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
                     std::cout << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
                 }
             }
-            //Fill entity list
-            // 
-            //std::cout << "Current max: " << (int)preCheck << std::endl;
-            //for (entityListOffset = 0; entityListOffset < 10; entityListOffset++) {
-            //    entityPtr = NULL;
-            //    sanityCheck = EntityPtrSanityCheck(entityListOffset);
-            //    if (sanityCheck != '\0') {
-            //        entityPtr = GetEntityPointer(entityListOffset);
-            //        if (entityPtr != NULL) {
-            //            std::cout << "Offset " << entityListOffset << " Address " << std::hex << entityPtr << std::endl;
-            //        }
-            //    }
-            //}
 
-            //crashes
-            //entityListOffset = 0;
-            //if (0 < preCheck) {
-            //    do {
-            //        sanityCheck = EntityPtrSanityCheck(entityListOffset);
-            //        if (sanityCheck != '\0') {
-            //            entityPtr = NULL;
-            //            entityPtr = GetEntityPointer(entityListOffset);
-            //            //ptrEntityChar = reinterpret_cast<unsigned char*>(entityPtr);
-            //            if (entityPtr != NULL && entityPtr != 0) {
-            //                std::cout << "Offset " << entityListOffset << " Address " << std::hex << entityPtr << std::endl;
-            //            }
-            //            //objectId = (int)(ptrEntityChar + 0x23c);
-            //            //if (objectId > 0) {
-            //            //    EntityOidList[i] = objectId;
-            //            //    std::cout << "Offset " << i << " OID " << EntityOidList[i] << std::endl;
-            //            //}
-            //        }
-            //        entityListOffset += 1;
-            //    } while (entityListOffset < preCheck);
-            //
-            //}
-            //
-            // 
+            break;
+        case NPC_OFFSET:
+            // offset from OID
+            GetWindowText(hDlgNPCOid, strNPCObjectId, 10);
+            //objectId = 9256;
+            //npcEntityListOffset = 0;
+            //npcEntityListOffset = GetNPCEntityOffsetFromOid(_wtoi(strNPCObjectId));
 
-            //entityPtr = NULL;
-            //GetWindowText(hDlgNewPosHeading, strObjectId, 10);
-            ////objectId = 9256;
-            //entityPtr = GetEntityPointer(_wtoi(strObjectId));
-            //if (entityPtr != NULL) {
-            //    std::cout << "tempEntity Address: " << std::hex << entityPtr << std::endl;
+            findEntityByOid(_wtoi(strNPCObjectId));
+            //if (npcEntityListOffset != 0) {
+            //    std::cout << "Entity offset: " << std::hex << (int)npcEntityListOffset << std::endl;
             //}
             ////reset the strObjectId buffer
             //for (int i = 0; i < 10; i++) {
             //    strObjectId[i] = '\0';
             //}
+            break;
+        case PLYR_OFFSET:
 
+            //player flag is at 0x28e, 4 is a player
+            std::cout << "---Current Players---\n";
+            for (int i = 0; i < 2000; i++) {
+                if (EntityList[i] != 0) {
+                    unsigned char* tempPtr = EntityList[i];
+                    if (*(short*)(tempPtr + 0x28e) == 4) {
+                        std::cout << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)(tempPtr + 0x23c) << std::endl;
+                    }
+                }
+            }
+            //
+            ////Now lookup that offset in our EntityList
+            //for (int i = 0; i < 1000; i++) {
+            //    //break on 0xff
+            //    if (playerEntityOffsets[i] == 0 || playerEntityOffsets[i] == 0xffffffff) {
+            //        std::cout << "broke loop" << std::endl;
+            //        break;
+            //    }
+            //    std::cout << "search plyrEntityListOffset: " << std::hex << playerEntityOffsets[i] << std::endl;
+            //    findEntityByOffset(playerEntityOffsets[i]);
+            //}
+
+            // offset from OID
+            //GetWindowText(hDlgPlyrOid, strPlyrObjectId, 10);
+            ////objectId = 9256;
+            //plyrEntityListOffset = 0;
+            //plyrEntityListOffset = GetPlyrEntityOffsetFromListIndex(_wtoi(strPlyrObjectId));
+            //
+            //if (plyrEntityListOffset != 0) {
+            //    std::cout << "Entity offset: " << std::hex << (int)plyrEntityListOffset << std::endl;
+            //}
             break;
         }
     }
@@ -615,6 +610,22 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     hDlgNewPosHeading = CreateWindowEx(0, L"EDIT", L"5555", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x2_offset, 825, 100, 25, hwnd, NULL, hModule, NULL);
     hGoButton = CreateWindowEx(0, L"button", L"Go Pos", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 140 + x2_offset, 850, 100, 25, hwnd, (HMENU)GO_POS, hModule, NULL);
 
+    int x3_offset = x2_offset + 120;
+    //New position labels
+    HWND hLabelEntOff = CreateWindowEx(0, L"STATIC", L"Entity Offsets", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x3_offset, 730, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelPOID = CreateWindowEx(0, L"STATIC", L"Player OID: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x3_offset, 750, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelNPCOID = CreateWindowEx(0, L"STATIC", L"NPC OID: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x3_offset, 775, 100, 25, hwnd, NULL, hModule, NULL);
+    HWND hLabelEntList = CreateWindowEx(0, L"STATIC", L"EntityList: ", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x3_offset, 800, 100, 25, hwnd, NULL, hModule, NULL);
+    hEntButton = CreateWindowEx(0, L"button", L"Show", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 140 + x3_offset, 825, 100, 25, hwnd, (HMENU)ENT_LIST, hModule, NULL);
+
+    int x4_offset = x3_offset + 100;
+    //New position dialogs
+    hDlgPlyrOid = CreateWindowEx(0, L"EDIT", L"12345", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x4_offset, 750, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgNPCOid = CreateWindowEx(0, L"EDIT", L"1111", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 140 + x4_offset, 775, 100, 25, hwnd, NULL, hModule, NULL);
+
+    int x5_offset = x4_offset + 110;
+    hPlyrOffset = CreateWindowEx(0, L"button", L"Get", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 140 + x5_offset, 750, 100, 25, hwnd, (HMENU)PLYR_OFFSET, hModule, NULL);
+    hNPCOffset = CreateWindowEx(0, L"button", L"Get", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 140 + x5_offset, 775, 100, 25, hwnd, (HMENU)NPC_OFFSET, hModule, NULL);
 
     hLogSend = CreateWindowEx(0, L"button", L"Log Send", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 110, 705, 100, 25, hwnd, (HMENU)LOG_SEND, hModule, NULL);
     hLogRecv = CreateWindowEx(0, L"button", L"Log Recv", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 210, 705, 100, 25, hwnd, (HMENU)LOG_RECV, hModule, NULL);
