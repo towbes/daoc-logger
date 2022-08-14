@@ -284,11 +284,10 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             break;
 
         case ENT_LIST:
-            //hijacked for temporary test of entity test
             //
             for (int i = 0; i < 2000; i++) {
                 if (EntityList[i] != 0) {
-                    unsigned char* tempPtr = EntityList[i];
+                    unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
                     tempPtr += 0x23c;
                     std::cout << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
                 }
@@ -317,7 +316,7 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             std::cout << "---Current Players---\n";
             for (int i = 0; i < 2000; i++) {
                 if (EntityList[i] != 0) {
-                    unsigned char* tempPtr = EntityList[i];
+                    unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
                     if (*(short*)(tempPtr + 0x28e) == 4) {
                         std::cout << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)(tempPtr + 0x23c) << std::endl;
                     }

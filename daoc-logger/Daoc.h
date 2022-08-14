@@ -38,16 +38,17 @@ int plyrEntityHookLen = 5;
 
 //Entity global variables/lists
 int objectId;
-unsigned char* ptrEntityChar;
+uintptr_t ptrEntityChar;
 DWORD jmpBackAddrEntity;
 
-unsigned char* EntityList[2000];
+uintptr_t EntityList[2000] = {0};
 //This list starts at index = 2
 int playerEntityList[1003];
 uintptr_t tempAddress;
 int entityOffset;
 int npcEntityListOffset;
 int plyrEntityListOffset;
+
 
 //EntityUpdate Loop hook
 //Address of signature = game.dll + 0x00017DD6
@@ -62,7 +63,7 @@ bool findEntityByOffset(int offset) {
             return false;
         }
         if (offset == (int)EntityList[i]) {
-            unsigned char* tempPtr = EntityList[i];
+            unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
             tempPtr += 0x23c;
             std::cout << "Player Offset " << offset << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
             return true;
@@ -74,9 +75,10 @@ bool findEntityByOffset(int offset) {
 bool findEntityByOid(short oid) {
     for (int i = 0; i < 2000; i++) {
         if ((int)EntityList[i] == 0) {
+            std::cout << "Not found" << std::endl;
             return false;
         }
-        unsigned char* tempPtr = EntityList[i];
+        unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
         tempPtr += 0x23c;
         if (oid == *(uint16_t*)tempPtr) {
 
@@ -84,6 +86,7 @@ bool findEntityByOid(short oid) {
             return true;
         }
     }
+    std::cout << "Not found" << std::endl;
     return false;
 }
 
@@ -97,11 +100,15 @@ void __declspec(naked) entityLoopFunc() {
         mov entityOffset, edi
     }
 
+    //subtract one because hook is right after the inc instruction
     entityOffset -= 1;
 
+    if (entityOffset == 0) {
+        memset(EntityList, 0, sizeof(EntityList));
+    }
 
     if (entityOffset > -1 && entityOffset < 2000) {
-        EntityList[(int)entityOffset] = (unsigned char*)tempAddress;
+        EntityList[(int)entityOffset] = tempAddress;
     }
 
     tempAddress = 0;
