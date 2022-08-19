@@ -28,6 +28,7 @@
 #define PLYR_OFFSET (WM_APP + 112)
 #define NPC_OFFSET (WM_APP + 113)
 #define PLYR_BUFFS (WM_APP + 114)
+#define PLYR_SKILLS (WM_APP + 115)
 
 HMODULE inj_hModule;
 HWND hCraftedPacket;
@@ -346,10 +347,16 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             //}
             break;
         case PLYR_BUFFS:
-            int offset = 0;
+
             for (int i = 0; i < 75; i++) {
-                std::cout << "Buff " << i << ": " << plyrBuffTable[i].name << std::endl;
+                std::cout << std::oct << "Buff " << i << ": " << plyrBuffTable[i].name << std::endl;
             }
+            break;
+        case PLYR_SKILLS:
+            for (int i = 0; i < 150; i++) {
+                std::cout << std::oct << "Skill " << i << ": " << plyrSkillTable[i].name << " ID: " << plyrSkillTable[i].buffId <<  std::endl;
+            }
+            break;
         }
     }
     return DefWindowProc(hWindow, uMessage, wParam, lParam);
@@ -513,8 +520,10 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     plyrBuffTableTemp = (void*)(ScanModIn((char*)plyrBuffTablePattern, (char*)plyrBuffTableMask, "game.dll"));
     plyrBuffTableLoc = (DWORD)((size_t)plyrBuffTableTemp + 0x1);
 
-    //Player buff table hook
-    void* toHookPlyrBuff = (void*)(ScanModIn((char*)plyrBuffHookPattern, (char*)plyrBuffHookMask, "game.dll"));
+
+    //Player skills
+    plyrSkillTableTemp = (void*)(ScanModIn((char*)plyrSkillTablePattern, (char*)plyrSkillTableMask, "game.dll"));
+    plyrSkillTableLoc = (DWORD)((size_t)plyrSkillTableTemp + 0x1);
 
     //Runspeed Hook
     void* toHookRunSpeed = (void*)(ScanModIn((char*)runSpeedPattern, (char*)runSpeedMask, "game.dll"));
@@ -538,7 +547,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "send function location:" << std::hex << (int)Send << std::endl;
     std::cout << "entity function location:" << std::hex << (int)toHookEntity << std::endl;
     std::cout << "plyrBuff Table location:" << std::hex << *(int*)plyrBuffTableLoc << std::endl;
-    std::cout << "plyrBuff function location:" << std::hex << (int)toHookPlyrBuff << std::endl;
+    std::cout << "plyrSkill Table location:" << std::hex << *(int*)plyrSkillTableLoc << std::endl;
     std::cout << "recv function location:" << std::hex << (int)toHookRecv << std::endl;
     std::cout << "Sell request location:" << std::hex << (int)SellRequest << std::endl;
     std::cout << "runspeed function location:" << std::hex << (int)toHookRunSpeed << std::endl;
@@ -555,14 +564,12 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     jmpBackAddrRecv = (size_t)toHookRecv + recvHookLen;
     jmpBackAddrRunSpeed = (size_t)toHookRunSpeed + runSpeedHookLen;
     jmpBackAddrEntity = (size_t)toHookEntity + entityLoopHookLen;
-    jmpBackAddrPlyrBuff = (size_t)toHookPlyrBuff + plyrBuffHookLen;
 
 #ifdef _DEBUG
     std::cout << "[Send Jump Back Addy:] 0x" << std::hex << jmpBackAddrSend << std::endl;
     std::cout << "[Recv Jump Back Addy:] 0x" << std::hex << jmpBackAddrRecv << std::endl;
     std::cout << "[RunSpeed Jump Back Addy:] 0x" << std::hex << jmpBackAddrRunSpeed << std::endl;
     std::cout << "[Entity Jump Back Addy:] 0x" << std::hex << jmpBackAddrEntity << std::endl;
-    std::cout << "[PlyrBuff Jump Back Addy:] 0x" << std::hex << jmpBackAddrPlyrBuff << std::endl;
 
 #endif
 
@@ -570,7 +577,6 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
     Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
     Hook* entityLoopHook = new Hook(toHookEntity, entityLoopFunc, entityLoopHookLen);
-    Hook* plyrBuffHook = new Hook(toHookPlyrBuff, plyrBuffHookFunc, plyrBuffHookLen);
 
 #ifdef _DEBUG
     std::cout << "[Player Position Pointer:] 0x" << std::hex << (int)playerPosition << std::endl;
@@ -587,6 +593,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     HWND hCleanItemButton;
     HWND hSellInventoryButton;
     HWND hPlyrBuffsButton;
+    HWND hPlyrSkillsButton;
     HWND hGoButton;
     
     RegisterDLLWindowClass(L"InjectedDLLWindowClass");
@@ -596,7 +603,8 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     hClearButton = CreateWindowEx(0, L"button", L"Clear Log", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 710, 100, 30, hwnd, (HMENU)CLEAR_BUTTON, hModule, NULL);
     hCleanItemButton = CreateWindowEx(0, L"button", L"Clean Items", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 750, 100, 30, hwnd, (HMENU)CLEANITEM_BUTTON, hModule, NULL);
     hSellInventoryButton = CreateWindowEx(0, L"button", L"Sell Inventory", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 790, 100, 30, hwnd, (HMENU)SELLINV_BUTTON, hModule, NULL);
-    hSellInventoryButton = CreateWindowEx(0, L"button", L"Show Buffs", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 830, 100, 30, hwnd, (HMENU)PLYR_BUFFS, hModule, NULL);
+    hPlyrBuffsButton = CreateWindowEx(0, L"button", L"Show Buffs", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 830, 100, 30, hwnd, (HMENU)PLYR_BUFFS, hModule, NULL);
+    hPlyrSkillsButton = CreateWindowEx(0, L"button", L"Show Skills", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 870, 100, 30, hwnd, (HMENU)PLYR_SKILLS, hModule, NULL);
     hSendButton = CreateWindowEx(0, L"button", L"Send", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 5, 1000, 100, 30, hwnd, (HMENU)SEND_BUTTON, hModule, NULL);
     hCraftedPacket = CreateWindowEx(0, L"edit", L"<Packet Data>", WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_BORDER, 110, 1000, 900, 100, hwnd, NULL, hModule, NULL);
 
@@ -695,7 +703,6 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //delete recvHook;
     delete runSpeedHook;
     delete entityLoopHook;
-    delete plyrBuffHook;
     
 
 #ifdef _DEBUG

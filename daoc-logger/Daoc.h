@@ -6,8 +6,10 @@ typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD
 _SendPacket Send;// = (_SendPacket)0x4281df;
 
 typedef void(__cdecl* _SellRequest)(int slotNum);
-_SellRequest SellRequest;// = (_SendPacket)0x42b2e3;
+_SellRequest SellRequest;// = (_SellRequest)0x42b2e3;
 
+
+//Player Buffs
 struct buff_t {
     unsigned char name[64];
     int unknown1;
@@ -31,38 +33,26 @@ DWORD plyrBuffTableLoc;
 unsigned char* plyrBuffTablePtr;
 
 
-//hook for when to copy the player buffs table
-//Address of signature = game.dll + 0x0001CDB5
-int plyrBuffHookLen = 6;
-const char* plyrBuffHookPattern = "\x5E\x5B\x80\x7A\x02";
-const char* plyrBuffHookMask = "xxxxx";
-DWORD jmpBackAddrPlyrBuff;
+//Skills
+struct skill_t {
+    unsigned char name[64];
+    unsigned char unknown1[32];
+    int unknown2;
+    int skillId;
+    unsigned char unknown3[64];
+};
 
-//Player buff table hook
-#define cmp_edx __asm _emit 0x80 __asm _emit 0x7A __asm _emit 0x02 __asm _emit 0x00
-void __declspec(naked) plyrBuffHookFunc() {
-    __asm {
-        pushad
-        pushf
-    }
+buff_t plyrSkillTable[150];
 
-    //copy the buff table
-    plyrBuffTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrBuffTableLoc));
-    for (int i = 0; i < 75; i++) {
-        plyrBuffTable[i] = *(buff_t*)(plyrBuffTablePtr);
-        plyrBuffTablePtr += sizeof(buff_t);
-    }
+//Start of skill list pattern
+//Address of signature = game.dll + 0x0001EEC8
+//At +0x1
+const char* plyrSkillTablePattern = "\xBA\x00\x00\x00\x00\x80\x3A";
+const char* plyrSkillTableMask = "x????xx";
+void* plyrSkillTableTemp;
+DWORD plyrSkillTableLoc;
+unsigned char* plyrSkillTablePtr;
 
-    __asm {
-        popf
-        popad
-        //instructions we overwrote
-        pop esi
-        pop ebx
-        cmp_edx
-        jmp[jmpBackAddrPlyrBuff]
-    }
-}
 
 //Each entity is 0x19B8 long?
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
@@ -156,6 +146,7 @@ void __declspec(naked) entityLoopFunc() {
         mov entityOffset, edi
     }
 
+    //Entity Table update
     //subtract one because hook is right after the inc instruction
     entityOffset -= 1;
 
@@ -166,8 +157,22 @@ void __declspec(naked) entityLoopFunc() {
     if (entityOffset > -1 && entityOffset < 2000) {
         EntityList[(int)entityOffset] = tempAddress;
     }
-
     tempAddress = 0;
+    
+    //Skills table updates
+    plyrSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrSkillTableLoc));
+    for (int i = 0; i < 150; i++) {
+        plyrSkillTable[i] = *(buff_t*)(plyrSkillTablePtr);
+        plyrSkillTablePtr += sizeof(buff_t);
+    }
+
+    //Copy the buff table
+    plyrBuffTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrBuffTableLoc));
+    for (int i = 0; i < 75; i++) {
+        plyrBuffTable[i] = *(buff_t*)(plyrBuffTablePtr);
+        plyrBuffTablePtr += sizeof(buff_t);
+    }
+    
     __asm {
         popf
         popad
