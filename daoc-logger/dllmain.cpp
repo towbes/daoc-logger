@@ -29,6 +29,7 @@
 #define NPC_OFFSET (WM_APP + 113)
 #define PLYR_BUFFS (WM_APP + 114)
 #define PLYR_SKILLS (WM_APP + 115)
+#define USE_SKILL (WM_APP + 116)
 
 HMODULE inj_hModule;
 HWND hCraftedPacket;
@@ -69,6 +70,10 @@ HWND hDlgNPCOid;
 HWND hEntButton;
 HWND hPlyrOffset;
 HWND hNPCOffset;
+
+//Skill Id
+HWND hDlgSkillId;
+wchar_t strSkillId[10];
 
 wchar_t craftedBuffer[533];
 char bufferToSend[533];
@@ -291,7 +296,7 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
                 if (EntityList[i] != 0) {
                     unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
                     tempPtr += 0x23c;
-                    std::cout << std::oct << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << std::oct << *(short*)tempPtr << std::endl;
+                    std::cout << std::dec << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << std::oct << *(short*)tempPtr << std::endl;
                 }
             }
 
@@ -349,14 +354,17 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
         case PLYR_BUFFS:
 
             for (int i = 0; i < 75; i++) {
-                std::cout << std::oct << "Buff " << i << ": " << plyrBuffTable[i].name << std::endl;
+                std::cout << std::dec << "Buff " << i << ": " << plyrBuffTable[i].name << std::endl;
             }
             break;
         case PLYR_SKILLS:
             for (int i = 0; i < 150; i++) {
-                std::cout << std::oct << "Skill " << i << ": " << plyrSkillTable[i].name << " ID: " << plyrSkillTable[i].buffId <<  std::endl;
+                std::cout << std::dec << "Skill " << i << ": " << plyrUseSkillTable[i].name  <<  std::endl;
             }
             break;
+        case USE_SKILL:
+            GetWindowText(hDlgSkillId, strSkillId, 10);
+            UseSkill(_wtoi(strSkillId), 1);
         }
     }
     return DefWindowProc(hWindow, uMessage, wParam, lParam);
@@ -510,6 +518,8 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     Send = (_SendPacket)(ScanModIn((char*)internalSendPattern, (char*)internalSendMask, "game.dll"));
     //Sell Hook
     SellRequest = (_SellRequest)(ScanModIn((char*)sellRequestPattern, (char*)sellRequestMask, "game.dll"));
+    //UseSkill Hook
+    UseSkill = (_UseSkill)(ScanModIn((char*)funcUseSkillPattern, (char*)funcUseSkillMask, "game.dll"));
     //Receive hook
     void* toHookRecv = (void*)(ScanModIn((char*)internalRecvPattern, (char*)internalRecvMask, "game.dll"));
 
@@ -524,6 +534,9 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //Player skills
     plyrSkillTableTemp = (void*)(ScanModIn((char*)plyrSkillTablePattern, (char*)plyrSkillTableMask, "game.dll"));
     plyrSkillTableLoc = (DWORD)((size_t)plyrSkillTableTemp + 0x1);
+    plyrUseSkillTableTemp = (void*)(ScanModIn((char*)plyrUseSkillTablePattern, (char*)plyrUseSkillTableMask, "game.dll"));
+    plyrUseSkillTableLoc = (DWORD)((size_t)plyrUseSkillTableTemp + 0x1);
+
 
     //Runspeed Hook
     void* toHookRunSpeed = (void*)(ScanModIn((char*)runSpeedPattern, (char*)runSpeedMask, "game.dll"));
@@ -548,6 +561,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "entity function location:" << std::hex << (int)toHookEntity << std::endl;
     std::cout << "plyrBuff Table location:" << std::hex << *(int*)plyrBuffTableLoc << std::endl;
     std::cout << "plyrSkill Table location:" << std::hex << *(int*)plyrSkillTableLoc << std::endl;
+    std::cout << "plyrUseSkill Table location:" << std::hex << *(int*)plyrUseSkillTableLoc << std::endl;
     std::cout << "recv function location:" << std::hex << (int)toHookRecv << std::endl;
     std::cout << "Sell request location:" << std::hex << (int)SellRequest << std::endl;
     std::cout << "runspeed function location:" << std::hex << (int)toHookRunSpeed << std::endl;
@@ -594,6 +608,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     HWND hSellInventoryButton;
     HWND hPlyrBuffsButton;
     HWND hPlyrSkillsButton;
+    HWND hUseSkillButton;
     HWND hGoButton;
     
     RegisterDLLWindowClass(L"InjectedDLLWindowClass");
@@ -660,6 +675,11 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     hFilterItems = CreateWindowEx(0, L"button", L"Filter Items", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 310, 705, 100, 25, hwnd, (HMENU)FILTER_ITEMS, hModule, NULL);
     hRunSpeedCheck = CreateWindowEx(0, L"button", L"Run Speed", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 410, 705, 100, 25, hwnd, (HMENU)TOGGLE_RUNSPEED, hModule, NULL);
     hRunSpeedValues = CreateWindow(WC_COMBOBOX, TEXT(""), CBS_DROPDOWN | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE, 510, 705, 100, 250, hwnd, (HMENU)CMB_SPEED, hModule, NULL);
+
+    //Use Skill
+    HWND hLabelSkillId = CreateWindowEx(0, L"STATIC", L"SkillSlot", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 120, 850, 100, 25, hwnd, NULL, hModule, NULL);
+    hDlgSkillId = CreateWindowEx(0, L"EDIT", L"12345", WS_CHILD | WS_VISIBLE | WS_CHILD | SS_LEFT, 120, 875, 100, 25, hwnd, NULL, hModule, NULL);
+    hUseSkillButton = CreateWindowEx(0, L"button", L"Use Skill", WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON, 120, 900, 100, 30, hwnd, (HMENU)USE_SKILL, hModule, NULL);
 
     //Fill the combobox with run speed values
     TCHAR runSpeeds[4][10] =

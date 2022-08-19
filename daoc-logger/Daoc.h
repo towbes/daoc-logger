@@ -2,12 +2,29 @@
 #include <set>
 #include <queue>
 
-typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
-_SendPacket Send;// = (_SendPacket)0x4281df;
+
+wchar_t moduleName[] = L"game.dll";
+
+//server name @ 0xc4a6a8
+
+//Module base address
+uintptr_t moduleBase;
+
 
 typedef void(__cdecl* _SellRequest)(int slotNum);
 _SellRequest SellRequest;// = (_SellRequest)0x42b2e3;
 
+//Sell Request pattern
+const char* sellRequestPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x56\x8B\x35\x00\x00\x00\x00\xD9\x06\xE8\x00\x00\x00\x00\xD9\x46\x00\x89\x45\x00\xE8\x00\x00\x00\x00\x89\x45\x00\x6A\x00\x58\xE8\x00\x00\x00\x00\x66\x89\x00\x00\x66\x8B\x00\x00\x8D\x75\x00\x66\x89\x00\x00\xE8\x00\x00\x00\x00\x6A\x00\x6A\x00\x8B\xC6\x6A";
+const char* sellRequestMask = "xxxxx?xxxxxx?x?xxx????xxx????xx?xx?x????xx?x?xx????xx??xx??xx?xx??x????x?x?xxx";
+
+//Use skill function
+typedef void(__cdecl* _UseSkill)(int skillSlot, int hasSkillFlag);
+_UseSkill UseSkill;// = (_UseSkill)0x42b5d5;
+
+//Address of signature = game.dll + 0x0002B5D5
+const char* funcUseSkillPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x0F\x85\x00\x00\x00\x00\xD9\x05\x00\x00\x00\x00\x57\x6A\x00\x33\xC0\x59\x8D\x7D\x00\xF3\x00\x8B\x0D\x00\x00\x00\x00\x5F\xD9\x41\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\x80\x4D\xFB\x00\x53\x33\xDB\x38\x59\x00\x56\x74\x00\xD9\x05\x00\x00\x00\x00\xD9\x41\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x3B\xC3\x75\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\x80\x4D\xFB\x00\xD9\x05\x00\x00\x00\x00\xD9\x05\x00\x00\x00\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\xE8\x00\x00\x00\x00\x84\xC0\x74\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x66\x89\x00\x00\x8B\x08\x89\x4D\x00\x8B\x48\x00\x89\x4D\x00\x8B\x48\x00\x8B\x40\x00\x89\x45\x00\x8A\x45\x00\x88\x45\x00\x8A\x45\x00\x8D\x75\x00\x89\x4D\x00\x88\x45\x00\xE8\x00\x00\x00\x00\x53\x6A\x00\x8B\xC6\x68";
+const char* funcUseSkillMask = "xxxxx?xxxxxx?xx????xx????xx?xxxxx?x?xx????xxx?xxxxxx?x?xxx?xxxxx?xx?xx????xx?xxxxxx?x?xxx?x????????xx????xxxx?x????????xxx?xxx?x????????xx????xxxx?xxx?xx????xx????xxxxxx?x?x????xxx?xxx?x????????xx????xxxx?xxx?x????????xx??xxxx?xx?xx?xx?xx?xx?xx?xx?xx?xx?xx?xx?x????xx?xxx";
 
 //Player Buffs
 struct buff_t {
@@ -34,15 +51,13 @@ unsigned char* plyrBuffTablePtr;
 
 
 //Skills
-struct skill_t {
-    unsigned char name[64];
-    unsigned char unknown1[32];
-    int unknown2;
-    int skillId;
-    unsigned char unknown3[64];
+struct useSkill_t {
+    unsigned char name[72];
+    int unknown1;
 };
 
 buff_t plyrSkillTable[150];
+useSkill_t plyrUseSkillTable[150];
 
 //Start of skill list pattern
 //Address of signature = game.dll + 0x0001EEC8
@@ -53,6 +68,13 @@ void* plyrSkillTableTemp;
 DWORD plyrSkillTableLoc;
 unsigned char* plyrSkillTablePtr;
 
+//UseSkill list start
+//Address of signature = game.dll + 0x0001EF56
+const char* plyrUseSkillTablePattern = "\xBF\x00\x00\x00\x00\xF3\x00\x89\x1D";
+const char* plyrUseSkillTableMask = "x????x?xx";
+void* plyrUseSkillTableTemp;
+DWORD plyrUseSkillTableLoc;
+unsigned char* plyrUseSkillTablePtr;
 
 //Each entity is 0x19B8 long?
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
@@ -166,6 +188,13 @@ void __declspec(naked) entityLoopFunc() {
         plyrSkillTablePtr += sizeof(buff_t);
     }
 
+    //UseSkills table updates
+    plyrUseSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSkillTableLoc));
+    for (int i = 0; i < 150; i++) {
+        plyrUseSkillTable[i] = *(useSkill_t*)(plyrUseSkillTablePtr);
+        plyrUseSkillTablePtr += sizeof(useSkill_t);
+    }
+
     //Copy the buff table
     plyrBuffTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrBuffTableLoc));
     for (int i = 0; i < 75; i++) {
@@ -183,13 +212,8 @@ void __declspec(naked) entityLoopFunc() {
 }
 
 
-
-wchar_t moduleName[] = L"game.dll";
-
-//server name @ 0xc4a6a8
-
-//Module base address
-uintptr_t moduleBase;
+typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
+_SendPacket Send;// = (_SendPacket)0x4281df;
 
 struct send_packet {
     std::vector<char> packetBuffer;
@@ -199,6 +223,8 @@ struct send_packet {
 };
 
 std::queue<std::shared_ptr<send_packet>> sendQueue;
+
+
 
 //Send hook variables
 //size_t sendFuncOffset = 0x281DF;
@@ -253,10 +279,6 @@ const char* autorunMask = "xx????x?xx????x";
 BYTE autorunToggle;
 
 
-
-//Sell Request pattern
-const char* sellRequestPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x56\x8B\x35\x00\x00\x00\x00\xD9\x06\xE8\x00\x00\x00\x00\xD9\x46\x00\x89\x45\x00\xE8\x00\x00\x00\x00\x89\x45\x00\x6A\x00\x58\xE8\x00\x00\x00\x00\x66\x89\x00\x00\x66\x8B\x00\x00\x8D\x75\x00\x66\x89\x00\x00\xE8\x00\x00\x00\x00\x6A\x00\x6A\x00\x8B\xC6\x6A";
-const char* sellRequestMask = "xxxxx?xxxxxx?x?xxx????xxx????xx?xx?x????xx?x?xx????xx??xx??xx?xx??x????x?x?xxx";
 
 struct playerpos_t {
     float pos_x;
