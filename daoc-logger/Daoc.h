@@ -8,6 +8,62 @@ _SendPacket Send;// = (_SendPacket)0x4281df;
 typedef void(__cdecl* _SellRequest)(int slotNum);
 _SellRequest SellRequest;// = (_SendPacket)0x42b2e3;
 
+struct buff_t {
+    unsigned char name[64];
+    int unknown1;
+    int buffTimeRemaining; //milliseconds
+    int slotNumber;
+    int tooltipId;
+    unsigned char unknown2[20];
+    int buffId;
+    unsigned char unknown3[64];
+};
+
+buff_t plyrBuffTable[75];
+
+//Location of Player buffs table
+//Address of signature = game.dll + 0x0001FB26
+// buff_t[75]
+const char* plyrBuffTablePattern = "\xBF\x00\x00\x00\x00\xC7\x45\xF8";
+const char* plyrBuffTableMask = "x????xxx";
+void* plyrBuffTableTemp;
+DWORD plyrBuffTableLoc;
+unsigned char* plyrBuffTablePtr;
+
+
+//hook for when to copy the player buffs table
+//Address of signature = game.dll + 0x0001CDB5
+int plyrBuffHookLen = 6;
+const char* plyrBuffHookPattern = "\x5E\x5B\x80\x7A\x02";
+const char* plyrBuffHookMask = "xxxxx";
+DWORD jmpBackAddrPlyrBuff;
+
+//Player buff table hook
+#define cmp_edx __asm _emit 0x80 __asm _emit 0x7A __asm _emit 0x02 __asm _emit 0x00
+void __declspec(naked) plyrBuffHookFunc() {
+    __asm {
+        pushad
+        pushf
+    }
+
+    //copy the buff table
+    plyrBuffTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrBuffTableLoc));
+    for (int i = 0; i < 75; i++) {
+        plyrBuffTable[i] = *(buff_t*)(plyrBuffTablePtr);
+        plyrBuffTablePtr += sizeof(buff_t);
+    }
+
+    __asm {
+        popf
+        popad
+        //instructions we overwrote
+        pop esi
+        pop ebx
+        cmp_edx
+        jmp[jmpBackAddrPlyrBuff]
+    }
+}
+
 //Each entity is 0x19B8 long?
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
 //Calling this function seems to crash due to race condition sometimes

@@ -6,3 +6,24 @@ start by just trying to player information across it.
 
 
 - Need to implement a command handler in the DLL, have it read from a portion of the shared segment to know when to do something, would it be better to just use a socket for this part?
+
+More info from developers-public on elitemmo:
+[12:21 AM] Sunderous: Hey, figure this might be a good place to ask a burning question I've got after going down some of the dll injection rabbit holes while thinking about where to take a hobby project.
+
+Let's say I've got a my code injected, and it knows which address internally stores some player information (x,y,z pos for instance).
+
+I know I can have my code read that location into a struct, and write it to an MMF/socket/etc.. But what's the best way to keep that value up to date in shared memory?
+
+It would be ideal if somehow the MMF or some other memory mapping approach could provide a "live structured view" into that region of game memory, but everything I've read tells me the mapping works the other way around (it's a separate block of shared memory optionally mapped to a file on disk).
+
+So are the only options to either poll the values internally and update the shared memory periodically, VS hook some of the game's functions and update the values when the game updates them? This would be in a purely read-only scenario where you're just exposing memory locations in a structured way.
+[4:54 AM] atom0s (Wiccaan):
+"I know I can have my code read that location into a struct, and write it to an MMF/socket/etc.. But what's the best way to keep that value up to date in shared memory?"
+
+Would be dependent on how critical it is to have the information exact with memory vs. being delayed to any degree. You would either need to hook onto the game in some manner and update your shared memory within the same main thread as the game to avoid any kind of locking issues, or you would need to create your own separate thread to do the updates to your shared memory, but also would potentially require adding your own locking mechanism to avoid any thread-safety issues / race conditions. 
+
+For things like player structure related information, there are going to be a lot of places that will act on that kind of data (ie. a function that handles health regen, a function that handles dealing with getting hit, a function that handles updating your position based on input/movement, and so on) so there may not be a single specific point to hook onto that is 'best'. In that regard it may come down to hooking onto the games rendering handling and just before the current frame is drawn, you update your structures in your shared memory with everything at once.
+
+Or if the game is multiplayer you may find it works best to hook the packet handlers and update the information based on the packet data instead.
+[4:55 AM] atom0s (Wiccaan): If the amount of querying of the data isn't too intensive to on-the-fly read things, it can also just be fine to read the data every time its requested.
+[4:55 AM] atom0s (Wiccaan): Instead of making your own shared memory copy.
