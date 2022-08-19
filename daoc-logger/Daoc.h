@@ -154,7 +154,7 @@ bool findEntityByOid(short oid) {
         tempPtr += 0x23c;
         if (oid == *(uint16_t*)tempPtr) {
 
-            std::cout << "Entity Offset: " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
+            std::cout << "Entity Offset: " << std::dec << i << " Address: "  << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
             return true;
         }
     }
@@ -215,35 +215,45 @@ void __declspec(naked) entityLoopFunc() {
     }
 }
 
+struct entName_t {
+    char name[48];
+};
+
 //Entity names table hook
-//Address of signature = game.dll + 0x000144B7
-const char* entityNamesHookPattern = "\xD9\x9E\x00\x00\x00\x00\x0F\xBE";
-const char* entityNamesHookMask = "xx????xx";
-int entityNamesHookLen = 6;
+//Entity Offset is at esp+0x14
+//Address of signature = game.dll + 0x0003596D - call after strncpy
+const char* entNameHookPattern = "\x83\xC4\x00\xC6\x44\x37\xFF\x00\x8B\x45";
+const char* entNameHookMask = "xx?xxxx?xx";
+int entityNamesHookLen = 8;
 DWORD jmpBackEntityNames;
 uintptr_t createPacketAddress;
 std::map <short, std::string> entNameMap;
-short entObjId;
+int entOffsetNum;
 int entNameLen;
 
+entName_t entNameList[2000];
+
 //EntityUpdateLoopHook
-#define fstp __asm _emit 0xD9 __asm _emit 0x9E __asm _emit 0x8C __asm _emit 0x19 __asm _emit 0x00 __asm _emit 0x00 __asm _emit 0x00
+#define call_strncpy __asm _emit 0x83 __asm _emit 0xC4 __asm _emit 0x0C __asm _emit 0xC6 __asm _emit 0x44 __asm _emit 0x37 __asm _emit 0xFF __asm _emit 0x00
 void __declspec(naked) entityNamesFunc() {
     __asm {
         pushad
-        pushf
-        mov createPacketAddress, edi
+        //pushf
+        //0x24 + 0x14 bytes
+        mov eax, [esp + 0x34]
+        mov entOffsetNum, eax
+        //entName Len is in ESI
+        mov entNameLen, esi
     }
 
-    //entObjId = *(short*)createPacketAddress;
-    //entNameLen = (size_t) * (char*)(createPacketAddress + 0xe);
-    //entNameMap[entObjId] = std::string((char*)((int)createPacketAddress + 0x1d));
+    //static address 0x245e110
+    memcpy(entNameList[(int)entOffsetNum].name, (char*)0x245E110, entNameLen);
 
     __asm {
-        popf
+        //popf
         popad
         //instructions we overwrote
-        fstp
+        call_strncpy
         jmp[jmpBackEntityNames]
     }
 }

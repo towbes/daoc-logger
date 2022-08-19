@@ -296,7 +296,7 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
                 if (EntityList[i] != 0) {
                     unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
                     tempPtr += 0x23c;
-                    std::cout << std::dec << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << std::dec << *(short*)tempPtr << std::endl;
+                    std::cout << std::dec << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << std::dec << *(short*)tempPtr << " Name: " << entNameList[i].name <<  std::endl;
                 }
             }
 
@@ -529,6 +529,9 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //entity list hook
     void* toHookEntity = (void*)(ScanModIn((char*)entityLoopPattern, (char*)entityLoopMask, "game.dll"));
 
+    //entity name list
+    void* toHookEntityNames = (void*)(ScanModIn((char*)entNameHookPattern, (char*)entNameHookMask, "game.dll"));
+
     //player buffs address
     plyrBuffTableTemp = (void*)(ScanModIn((char*)plyrBuffTablePattern, (char*)plyrBuffTableMask, "game.dll"));
     plyrBuffTableLoc = (DWORD)((size_t)plyrBuffTableTemp + 0x1);
@@ -562,6 +565,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     std::cout << "module base is:" << std::hex << (int)moduleBase << std::endl;
     std::cout << "send function location:" << std::hex << (int)Send << std::endl;
     std::cout << "entity function location:" << std::hex << (int)toHookEntity << std::endl;
+    std::cout << "entityNames function location:" << std::hex << (int)toHookEntityNames << std::endl;
     std::cout << "plyrBuff Table location:" << std::hex << *(int*)plyrBuffTableLoc << std::endl;
     std::cout << "plyrSkill Table location:" << std::hex << *(int*)plyrSkillTableLoc << std::endl;
     std::cout << "plyrUseSkill Table location:" << std::hex << *(int*)plyrUseSkillTableLoc << std::endl;
@@ -581,12 +585,14 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     jmpBackAddrRecv = (size_t)toHookRecv + recvHookLen;
     jmpBackAddrRunSpeed = (size_t)toHookRunSpeed + runSpeedHookLen;
     jmpBackAddrEntity = (size_t)toHookEntity + entityLoopHookLen;
+    jmpBackEntityNames = (size_t)toHookEntityNames + entityNamesHookLen;
 
 #ifdef _DEBUG
     std::cout << "[Send Jump Back Addy:] 0x" << std::hex << jmpBackAddrSend << std::endl;
     std::cout << "[Recv Jump Back Addy:] 0x" << std::hex << jmpBackAddrRecv << std::endl;
     std::cout << "[RunSpeed Jump Back Addy:] 0x" << std::hex << jmpBackAddrRunSpeed << std::endl;
     std::cout << "[Entity Jump Back Addy:] 0x" << std::hex << jmpBackAddrEntity << std::endl;
+    std::cout << "[EntityNames Jump Back Addy:] 0x" << std::hex << jmpBackEntityNames << std::endl;
 
 #endif
 
@@ -594,6 +600,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //Hook* recvHook = new Hook(toHookRecv, recvHookFunc, recvHookLen);
     Hook* runSpeedHook = new Hook(toHookRunSpeed, runSpeedHookFunc, runSpeedHookLen);
     Hook* entityLoopHook = new Hook(toHookEntity, entityLoopFunc, entityLoopHookLen);
+    Hook* entityNamesHook = new Hook(toHookEntityNames, entityNamesFunc, entityNamesHookLen);
 
 #ifdef _DEBUG
     std::cout << "[Player Position Pointer:] 0x" << std::hex << (int)playerPosition << std::endl;
@@ -726,6 +733,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
     //delete recvHook;
     delete runSpeedHook;
     delete entityLoopHook;
+    delete entityNamesHook;
     
 
 #ifdef _DEBUG
