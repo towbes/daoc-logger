@@ -1,6 +1,7 @@
 #pragma once
 #include <set>
 #include <queue>
+#include <map>
 
 
 wchar_t moduleName[] = L"game.dll";
@@ -214,6 +215,38 @@ void __declspec(naked) entityLoopFunc() {
     }
 }
 
+//Entity names table hook
+//Address of signature = game.dll + 0x000144B7
+const char* entityNamesHookPattern = "\xD9\x9E\x00\x00\x00\x00\x0F\xBE";
+const char* entityNamesHookMask = "xx????xx";
+int entityNamesHookLen = 6;
+DWORD jmpBackEntityNames;
+uintptr_t createPacketAddress;
+std::map <short, std::string> entNameMap;
+short entObjId;
+int entNameLen;
+
+//EntityUpdateLoopHook
+#define fstp __asm _emit 0xD9 __asm _emit 0x9E __asm _emit 0x8C __asm _emit 0x19 __asm _emit 0x00 __asm _emit 0x00 __asm _emit 0x00
+void __declspec(naked) entityNamesFunc() {
+    __asm {
+        pushad
+        pushf
+        mov createPacketAddress, edi
+    }
+
+    //entObjId = *(short*)createPacketAddress;
+    //entNameLen = (size_t) * (char*)(createPacketAddress + 0xe);
+    //entNameMap[entObjId] = std::string((char*)((int)createPacketAddress + 0x1d));
+
+    __asm {
+        popf
+        popad
+        //instructions we overwrote
+        fstp
+        jmp[jmpBackEntityNames]
+    }
+}
 
 typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
 _SendPacket Send;// = (_SendPacket)0x4281df;
