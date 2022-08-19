@@ -308,7 +308,8 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
             //npcEntityListOffset = 0;
             //npcEntityListOffset = GetNPCEntityOffsetFromOid(_wtoi(strNPCObjectId));
 
-            findEntityByOid(_wtoi(strNPCObjectId));
+            findEntOffset = findEntityByOid(_wtoi(strNPCObjectId));
+            std::cout << "Entity offset: " << std::dec << findEntOffset << std::endl;
             //if (npcEntityListOffset != 0) {
             //    std::cout << "Entity offset: " << std::hex << (int)npcEntityListOffset << std::endl;
             //}

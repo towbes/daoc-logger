@@ -120,6 +120,7 @@ uintptr_t tempAddress;
 int entityOffset;
 int npcEntityListOffset;
 int plyrEntityListOffset;
+int findEntOffset;
 
 
 //EntityUpdate Loop hook
@@ -144,22 +145,21 @@ bool findEntityByOffset(int offset) {
     return false;
 }
 
-bool findEntityByOid(short oid) {
+int findEntityByOid(short oid) {
     for (int i = 0; i < 2000; i++) {
         if ((int)EntityList[i] == 0) {
-            std::cout << "Not found" << std::endl;
-            return false;
+            //std::cout << "Not found" << std::endl;
+            return 0;
         }
         unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
         tempPtr += 0x23c;
-        if (oid == *(uint16_t*)tempPtr) {
-
-            std::cout << "Entity Offset: " << std::dec << i << " Address: "  << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
-            return true;
+        if (oid == *(short*)tempPtr) {
+            //std::cout << "Entity Offset: " << std::dec << i << " Address: "  << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
+            return i;
         }
     }
-    std::cout << "Not found" << std::endl;
-    return false;
+    //std::cout << "Not found" << std::endl;
+    return 0;
 }
 
 //EntityUpdateLoopHook
@@ -221,33 +221,50 @@ struct entName_t {
 
 //Entity names table hook
 //Entity Offset is at esp+0x14
-//Address of signature = game.dll + 0x0003596D - call after strncpy
-const char* entNameHookPattern = "\x83\xC4\x00\xC6\x44\x37\xFF\x00\x8B\x45";
-const char* entNameHookMask = "xx?xxxx?xx";
-int entityNamesHookLen = 8;
+//Address of signature = game.dll + 0x000144E3 - after strncpy in packet function
+const char* entNameHookPattern = "\x6A\x00\x83\xC3\x00\x59";
+const char* entNameHookMask = "x?xx?x";
+int entityNamesHookLen = 5;
 DWORD jmpBackEntityNames;
 uintptr_t createPacketAddress;
+uintptr_t objIdAddress;
 std::map <short, std::string> entNameMap;
 int entOffsetNum;
 int entNameLen;
+int entObjId;
 
 entName_t entNameList[2000];
 
 //EntityUpdateLoopHook
-#define call_strncpy __asm _emit 0x83 __asm _emit 0xC4 __asm _emit 0x0C __asm _emit 0xC6 __asm _emit 0x44 __asm _emit 0x37 __asm _emit 0xFF __asm _emit 0x00
+#define call_strncpy __asm _emit 0x6A __asm _emit 0x03 __asm _emit 0x83 __asm _emit 0xC3 __asm _emit 0x1D
 void __declspec(naked) entityNamesFunc() {
     __asm {
         pushad
         //pushf
-        //0x24 + 0x14 bytes
-        mov eax, [esp + 0x34]
+        //push adds 0x24 to stack, pointer to the packet was at top of stack
+        mov eax, [esp + 0x24]
+        mov createPacketAddress, eax
+        //Beginning of packet address is objectId and on top of stack
+        mov eax, [esp]
+        mov objIdAddress, eax
+        //Entity offset was in eax and is now in esp + 0x10
+        mov eax, [esp + 0x10]
         mov entOffsetNum, eax
         //entName Len is in ESI
-        mov entNameLen, esi
+        //mov entNameLen, esi
     }
 
+    //at 0x19eb5c
+    //entObjId = *(int*)(objIdAddress);
+    //entOffsetNum = 0;
+    //entOffsetNum = findEntityByOid((int)entObjId);
+    if (entOffsetNum > 0) {
+        memcpy(entNameList[(int)entOffsetNum].name, (char*)createPacketAddress, 48);
+    }
+
+    entOffsetNum = 0;
     //static address 0x245e110
-    memcpy(entNameList[(int)entOffsetNum].name, (char*)0x245E110, entNameLen);
+    //memcpy(entNameList[(int)entOffsetNum].name, (char*)0x245E110, entNameLen);
 
     __asm {
         //popf
