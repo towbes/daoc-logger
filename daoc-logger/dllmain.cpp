@@ -296,7 +296,7 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
                 if (EntityList[i] != 0) {
                     unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
                     tempPtr += 0x23c;
-                    std::cout << std::dec << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << std::oct << *(short*)tempPtr << std::endl;
+                    std::cout << std::dec << "Offset " << i << ": " << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << std::dec << *(short*)tempPtr << std::endl;
                 }
             }
 
@@ -354,12 +354,15 @@ LRESULT CALLBACK MessageHandler(HWND hWindow, UINT uMessage, WPARAM wParam, LPAR
         case PLYR_BUFFS:
 
             for (int i = 0; i < 75; i++) {
+                if (plyrBuffTable[i].name[0] != '\0')
                 std::cout << std::dec << "Buff " << i << ": " << plyrBuffTable[i].name << std::endl;
             }
             break;
         case PLYR_SKILLS:
             for (int i = 0; i < 150; i++) {
-                std::cout << std::dec << "Skill " << i << ": " << plyrUseSkillTable[i].name  <<  std::endl;
+                if (plyrUseSkillTable[i].name[0] != '\0') {
+                    std::cout << std::dec << "Skill " << i << ": " << plyrUseSkillTable[i].name << std::endl;
+                }
             }
             break;
         case USE_SKILL:
@@ -709,7 +712,7 @@ DWORD WINAPI WindowThread(HMODULE hModule){
 
 
     while (GetMessage(&messages, NULL, 0, 0)){
-        if (GetAsyncKeyState(VK_RWIN) & 1) {
+        if (GetAsyncKeyState(VK_RCONTROL) & 1) {
             break;
         }
         TranslateMessage(&messages);

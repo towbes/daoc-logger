@@ -48,6 +48,7 @@ const char* plyrBuffTableMask = "x????xxx";
 void* plyrBuffTableTemp;
 DWORD plyrBuffTableLoc;
 unsigned char* plyrBuffTablePtr;
+int pbtCount;
 
 
 //Skills
@@ -67,6 +68,7 @@ const char* plyrSkillTableMask = "x????xx";
 void* plyrSkillTableTemp;
 DWORD plyrSkillTableLoc;
 unsigned char* plyrSkillTablePtr;
+int pstCount;
 
 //UseSkill list start
 //Address of signature = game.dll + 0x0001EF56
@@ -75,6 +77,7 @@ const char* plyrUseSkillTableMask = "x????x?xx";
 void* plyrUseSkillTableTemp;
 DWORD plyrUseSkillTableLoc;
 unsigned char* plyrUseSkillTablePtr;
+int pusCount;
 
 //Each entity is 0x19B8 long?
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
@@ -183,22 +186,22 @@ void __declspec(naked) entityLoopFunc() {
     
     //Skills table updates
     plyrSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrSkillTableLoc));
-    for (int i = 0; i < 150; i++) {
-        plyrSkillTable[i] = *(buff_t*)(plyrSkillTablePtr);
+    for (pstCount = 0; pstCount < 150; pstCount++) {
+        plyrSkillTable[pstCount] = *(buff_t*)(plyrSkillTablePtr);
         plyrSkillTablePtr += sizeof(buff_t);
     }
-
-    //UseSkills table updates
+    //
+    ////UseSkills table updates
     plyrUseSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSkillTableLoc));
-    for (int i = 0; i < 150; i++) {
-        plyrUseSkillTable[i] = *(useSkill_t*)(plyrUseSkillTablePtr);
+    for (pusCount = 0; pusCount < 150; pusCount++) {
+        plyrUseSkillTable[pusCount] = *(useSkill_t*)(plyrUseSkillTablePtr);
         plyrUseSkillTablePtr += sizeof(useSkill_t);
     }
-
-    //Copy the buff table
+    //
+    ////Copy the buff table
     plyrBuffTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrBuffTableLoc));
-    for (int i = 0; i < 75; i++) {
-        plyrBuffTable[i] = *(buff_t*)(plyrBuffTablePtr);
+    for (pbtCount = 0; pbtCount < 75; pbtCount++) {
+        plyrBuffTable[pbtCount] = *(buff_t*)(plyrBuffTablePtr);
         plyrBuffTablePtr += sizeof(buff_t);
     }
     
