@@ -121,6 +121,7 @@ int entityOffset;
 int npcEntityListOffset;
 int plyrEntityListOffset;
 int findEntOffset;
+int entbyoidCount;
 
 
 //EntityUpdate Loop hook
@@ -146,16 +147,16 @@ bool findEntityByOffset(int offset) {
 }
 
 int findEntityByOid(short oid) {
-    for (int i = 0; i < 2000; i++) {
-        if ((int)EntityList[i] == 0) {
+    for (entbyoidCount = 0; entbyoidCount < 2000; entbyoidCount++) {
+        if ((int)EntityList[entbyoidCount] == 0) {
             //std::cout << "Not found" << std::endl;
             return 0;
         }
-        unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
+        unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[entbyoidCount]);
         tempPtr += 0x23c;
         if (oid == *(short*)tempPtr) {
             //std::cout << "Entity Offset: " << std::dec << i << " Address: "  << std::hex << (uintptr_t)EntityList[i] << " ObjectID: " << *(uint16_t*)tempPtr << std::endl;
-            return i;
+            return entbyoidCount;
         }
     }
     //std::cout << "Not found" << std::endl;
@@ -176,9 +177,11 @@ void __declspec(naked) entityLoopFunc() {
     //subtract one because hook is right after the inc instruction
     entityOffset -= 1;
 
-    if (entityOffset == 0) {
-        memset(EntityList, 0, sizeof(EntityList));
-    }
+    //if (entityOffset == 0) {
+    //    //clear out the remainder of the list
+    //    memset(&EntityList[*(int*)0xaa4c5c], 0, sizeof(uintptr_t) * (2000 - *(int*)0xaa4c5c));
+    //}
+    //entity list current max at 0xaa4c5c
 
     if (entityOffset > -1 && entityOffset < 2000) {
         EntityList[(int)entityOffset] = tempAddress;
@@ -248,16 +251,16 @@ void __declspec(naked) entityNamesFunc() {
         mov eax, [esp]
         mov objIdAddress, eax
         //Entity offset was in eax and is now in esp + 0x10
-        mov eax, [esp + 0x10]
-        mov entOffsetNum, eax
+        //mov eax, [esp + 0x10]
+        //mov entOffsetNum, eax
         //entName Len is in ESI
         //mov entNameLen, esi
     }
 
     //at 0x19eb5c
-    //entObjId = *(int*)(objIdAddress);
-    //entOffsetNum = 0;
-    //entOffsetNum = findEntityByOid((int)entObjId);
+    entObjId = *(int*)(objIdAddress);
+    entOffsetNum = 0;
+    entOffsetNum = findEntityByOid((int)entObjId);
     if (entOffsetNum > 0) {
         memcpy(entNameList[(int)entOffsetNum].name, (char*)createPacketAddress, 48);
     }
