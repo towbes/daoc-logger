@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "menuGui.h"
+#include "Daoc.h"
 
 bool g_ShowDemo = false;
 
@@ -19,16 +20,28 @@ void DrawGui() {
         static float f = 0.0f;
         static int counter = 0;
 
-        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Daoc Logger");                          // Create a window called "Hello, world!" and append into it.
 
-        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
+        static int dumpClicked = 0;
+        if (ImGui::Button("Dump Entities"))
+            dumpClicked++;
+        if (dumpClicked & 1)
+        {
+            DumpEntities();
+        }
+        // Child 1: no border, enable horizontal scrollbar
+        {
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            static bool disable_mouse_wheel = false;
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
+            if (disable_mouse_wheel)
+                window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
+            ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, 260), false, window_flags);
+            for (int i = 0; i < 100; i++)
+                ImGui::Text("%04d: scrollable region", i);
+            ImGui::EndChild();
+        }
+        
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();

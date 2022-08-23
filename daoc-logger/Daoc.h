@@ -11,6 +11,9 @@ wchar_t moduleName[] = L"game.dll";
 //Module base address
 uintptr_t moduleBase;
 
+void DumpEntities() {
+
+};
 
 typedef void(__cdecl* _SellRequest)(int slotNum);
 _SellRequest SellRequest;// = (_SellRequest)0x42b2e3;

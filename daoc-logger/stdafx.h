@@ -16,8 +16,6 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
-
-
 //imgui
 #include "imgui.h"
 #include "backends/imgui_impl_dx9.h"

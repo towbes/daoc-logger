@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include "Daoc.h"
 #include "Hook.h"
 #include "Scan.h"
 
