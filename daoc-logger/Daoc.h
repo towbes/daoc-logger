@@ -11,9 +11,7 @@ wchar_t moduleName[] = L"game.dll";
 //Module base address
 uintptr_t moduleBase;
 
-void DumpEntities() {
 
-};
 
 typedef void(__cdecl* _SellRequest)(int slotNum);
 _SellRequest SellRequest;// = (_SellRequest)0x42b2e3;
@@ -126,6 +124,15 @@ int plyrEntityListOffset;
 int findEntOffset;
 int entbyoidCount;
 
+void DumpEntities() {
+    memset(EntityList, 0, sizeof(EntityList));
+    for (int i = 0; i < 2000; i++) {
+        tempAddress = GetEntityPointer(i);
+        if (tempAddress != 0) {
+            EntityList[i] = tempAddress;
+        }
+    }
+};
 
 //EntityUpdate Loop hook
 //Address of signature = game.dll + 0x00017DD6

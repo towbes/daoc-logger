@@ -36,9 +36,13 @@ void DrawGui() {
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
             if (disable_mouse_wheel)
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
-            ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, 260), false, window_flags);
+            ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), false, window_flags);
             for (int i = 0; i < 100; i++)
-                ImGui::Text("%04d: scrollable region", i);
+                if (EntityList[i] != 0) {
+                    unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
+                    ImGui::Text("%d : 0x%x - oid: %d", i, EntityList[i], *(uint16_t*)(tempPtr + 0x23c));
+                }
+                
             ImGui::EndChild();
         }
         
