@@ -390,7 +390,7 @@ void __declspec(naked) sendHookFunc() {
     sentBuffer = (char*)sentBuffPtr;
 
     if (logSentHook) {
-        printSendBufferToLog();
+        //printSendBufferToLog();
     }
     __asm {
         popad
@@ -420,7 +420,7 @@ void __declspec(naked) recvHookFunc() {
     recvBuffer = (unsigned char*)receiveBuffer;
 
     if (logRecvHook) {
-        printRecvBufferToLog();
+        //printRecvBufferToLog();
     }
     if (filterItemFlag) {
         p_filterItems();

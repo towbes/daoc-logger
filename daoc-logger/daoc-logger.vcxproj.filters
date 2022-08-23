@@ -22,6 +22,9 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{53435a21-d5ee-4a43-b0b8-6c3bc7c130a5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="stdafx">
+      <UniqueIdentifier>{5da0e321-550c-46b7-b1fe-aa10d9052141}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -53,6 +56,15 @@
     </ClCompile>
     <ClCompile Include="imgui\backends\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="menuGui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="winguiBackup.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>stdafx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +112,15 @@
     </ClInclude>
     <ClInclude Include="imgui\backends\imgui_impl_win32.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="menuGui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>stdafx</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>stdafx</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 /*
 #define MYMENU_EXIT (WM_APP + 100)
 #define SEND_BUTTON (WM_APP + 101)

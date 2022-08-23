@@ -1,4 +1,6 @@
 #include "mem.h"
+#include "stdafx.h"
+
 
 bool mHook(char* src, char* dst, int len)
 {

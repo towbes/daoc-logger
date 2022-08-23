@@ -74,11 +74,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
-    <IncludePath>C:\Users\ritzgames\imgui;$(DXSDK_DIR)Include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir);C:\Users\ritzgames\imgui;$(DXSDK_DIR)Include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\ritzgames\imgui;$(DXSDK_DIR)Include;C:\Users\ritzgames\Detours\src;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);C:\Users\ritzgames\imgui;$(DXSDK_DIR)Include;C:\Users\ritzgames\Detours\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -94,6 +94,7 @@
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -109,6 +110,7 @@
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -157,6 +159,9 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="mem.cpp" />
+    <ClCompile Include="menuGui.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="winguiBackup.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gh_d3d9.h" />
@@ -169,11 +174,14 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="mem.h" />
+    <ClInclude Include="menuGui.h" />
     <ClInclude Include="ntdll_dbg.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="PacketProcessor.h" />
     <ClInclude Include="Scan.h" />
     <ClInclude Include="Daoc.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

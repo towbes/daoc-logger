@@ -1,24 +1,18 @@
-#include <windows.h>
-#include <iostream>
-#include <iomanip>
+#include "stdafx.h"
+
 #include "Daoc.h"
 #include "Hook.h"
 #include "Scan.h"
-#include <algorithm>
-#include <vector>
-#include <thread>
-#include <chrono>
-#include "commctrl.h"
+
 #include "PacketProcessor.h"
 #include "mem.h"
 #include "gh_d3d9.h"
-#include "imgui.h"
-#include "backends/imgui_impl_dx9.h"
-#include "backends/imgui_impl_win32.h"
+
+#include "menuGui.h"
 
 
 bool bInit = false;
-bool g_ShowMenu = true;
+
 tPresent oPresent = nullptr;
 tReset oReset = nullptr;
 LPDIRECT3DDEVICE9 pD3DDevice = nullptr;
@@ -89,38 +83,7 @@ HRESULT APIENTRY hkPresent(LPDIRECT3DDEVICE9 pDevice, const RECT* pSourceRect, c
     if (!bInit) InitImGui(pDevice);
     else {
 
-        ImGui_ImplDX9_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-
-        ImGui::NewFrame();
-
-        if (g_ShowMenu)
-        {
-            bool bShow = true;
-            ImGui::ShowDemoWindow(&bShow);
-        }
-        else {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-        ImGui::EndFrame();
-        ImGui::Render();
-        ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+        DrawGui();
     }
 
     return oPresent(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
