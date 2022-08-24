@@ -142,6 +142,24 @@ void DrawGui() {
             }//Todo add exception
             ImGui::TreePop();
         }
+        if (ImGui::TreeNode("PlayerInfo"))
+        {
+            ImGui::Text("Position (x,y,z,heading):");
+            ImGui::Text("%f %f %f %d", playerPosition->pos_x, playerPosition->pos_y, playerPosition->pos_z, playerPosition->heading);
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("Inventory"))
+        {
+            //look through all slots
+            for (int slotNum = 40; slotNum < 80; slotNum++) {
+                size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
+                uintptr_t* ValLoc2 = (uintptr_t*)(0xf9b8d0 + offset);
+                item_t itemTemp = (item_t&)*ValLoc2;
+                ImGui::Text("Slot %u, ItemHex: %02x, ItemId - %u, ItemName - %s\n", slotNum, itemTemp.itemId, itemTemp.itemId, itemTemp.itemName);
+            }
+            ImGui::TreePop();
+        }
+
 
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -166,4 +184,10 @@ void LoadHooks() {
 
     //UseSkill Address
     UseSkill = (_UseSkill)(ScanModIn((char*)funcUseSkillPattern, (char*)funcUseSkillMask, "game.dll"));
+
+    //Player position
+    void* ptrPlayerPosition = (void*)(ScanModIn((char*)ptrPlayerPositionPattern, (char*)ptrPlayerPositionMask, "game.dll"));
+    DWORD ptrPlayerPositionLocation = (DWORD)((size_t)ptrPlayerPosition + 0x2);
+    void* playerPositionPtr = *(void**)ptrPlayerPositionLocation;
+    playerPosition = *(playerpos_t**)playerPositionPtr;
 }
