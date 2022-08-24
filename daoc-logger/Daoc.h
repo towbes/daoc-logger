@@ -81,11 +81,68 @@ DWORD plyrUseSkillTableLoc;
 unsigned char* plyrUseSkillTablePtr;
 int pusCount;
 
+
 //Each entity is 0x19B8 long?
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
 //Calling this function seems to crash due to race condition sometimes
 typedef uintptr_t(__fastcall* _GetEntityPointer)(int entityOffset);
 _GetEntityPointer GetEntityPointer = (_GetEntityPointer)0x43589f;
+
+//table_dex:eax  entity_idx:ecx, Destination:stack0x4, count:stack0x8
+typedef uintptr_t(__cdecl* _GetEntityName)();
+_GetEntityName wGetEntityName = (_GetEntityName)0x4358ee;
+
+void* teax;
+void* tecx;
+
+
+uintptr_t __declspec(naked) GetEntityName(int table_idx, int entity_idx, char* Destination, size_t Count) {
+    __asm {
+        //pushad
+        //mov eax, table_idx
+        //mov ecx, entity_idx
+        //push Count
+        //push Destination
+        // 
+        ////First get the Count off stack(0x24 + 0xC), and push to top of stack
+        //mov eax, [esp+0x30]
+        //push eax
+        ////Now get the destination off stack (0x24 + 0x4 + 0x8) and push to top of stack
+        //mov eax, [esp+0x30]
+        //push eax
+        //// mov table index off stack(0x24 + 0x8) into eax
+        //mov eax, [esp+0x2C]
+        //// mov entity index off stack(0x24 + 0x8 + 0x4) into ecx
+        //mov ecx, [esp+0x30]
+        //First get the Count off stack(0x24 + 0xC), and push to top of stack
+        mov eax, [esp + 0x10]
+        push eax
+        //Now get the destination off stack (0x24 + 0x4 + 0x8) and push to top of stack
+        mov eax, [esp + 0x10]
+        push eax
+        // mov table index off stack(0x24 + 0x8) into eax
+        mov eax, [esp + 0xc]
+        // mov entity index off stack(0x24 + 0x8 + 0x4) into ecx
+        mov ecx, [esp + 0x10]
+    }
+
+    wGetEntityName();
+
+    __asm {
+        //popad
+        //skip the 4 stack values pushed from call to GetEntityName
+        add esp, 0x8
+        mov tecx, ecx; backup ecx
+        //pop off the top value of stack
+        pop ecx
+        //clean off the stack from this function
+        add esp, 0x10
+        //push the return value back onto stack
+        push ecx
+        //restore ecx
+        mov ecx, tecx
+    }
+}
 
 //Sanity checker before calling GetEntityPointer
 typedef char(__fastcall* _EntityPtrSanityCheck)(int entityListOffset);
@@ -124,15 +181,9 @@ int plyrEntityListOffset;
 int findEntOffset;
 int entbyoidCount;
 
-void DumpEntities() {
-    memset(EntityList, 0, sizeof(EntityList));
-    for (int i = 0; i < 2000; i++) {
-        tempAddress = GetEntityPointer(i);
-        if (tempAddress != 0) {
-            EntityList[i] = tempAddress;
-        }
-    }
-};
+int entityListMax = *(int*)0xaa4c5c;
+
+
 
 //EntityUpdate Loop hook
 //Address of signature = game.dll + 0x00017DD6
@@ -247,6 +298,19 @@ int entNameLen;
 int entObjId;
 
 entName_t entNameList[2000];
+
+int a;
+
+void DumpEntities() {
+    memset(EntityList, 0, sizeof(EntityList));
+    for (int i = 1; i < entityListMax; i++) {
+        tempAddress = GetEntityPointer(i);
+        if (tempAddress != 0) {
+            EntityList[i] = tempAddress;
+            GetEntityName(3, i, entNameList[i].name, 48);
+        }
+    }
+};
 
 //EntityUpdateLoopHook
 #define call_strncpy __asm _emit 0x6A __asm _emit 0x03 __asm _emit 0x83 __asm _emit 0xC3 __asm _emit 0x1D

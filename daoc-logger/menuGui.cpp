@@ -40,7 +40,7 @@ void DrawGui() {
             for (int i = 0; i < 100; i++)
                 if (EntityList[i] != 0) {
                     unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
-                    ImGui::Text("%d : 0x%x - oid: %d", i, EntityList[i], *(uint16_t*)(tempPtr + 0x23c));
+                    ImGui::Text("%d : 0x%x - %d - %s", i, EntityList[i], *(uint16_t*)(tempPtr + 0x23c), entNameList[i].name);
                 }
                 
             ImGui::EndChild();
