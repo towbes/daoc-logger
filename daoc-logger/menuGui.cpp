@@ -124,6 +124,25 @@ void DrawGui() {
             ImGui::TreePop();
         }
 
+        if (ImGui::TreeNode("PartyInfo"))
+        {
+            if (ptrPartyMemberInfo_x != NULL) {
+                //Create a new pointer and cast as unsigned char to be able to offset by single byte values
+                unsigned char* ptrMemberBytePtr = reinterpret_cast<unsigned char*>(partyMembers);
+                unsigned char* ptrPInfoBytePtr = reinterpret_cast<unsigned char*>(ptrPartyMemberInfo_x);
+                //Copy the 8 partymemberinfo_t structures into the shared memory
+                for (int i = 0; i < 8; i++) {
+                    //copy party member info
+                    *(partymemberinfo_t*)ptrMemberBytePtr = *(partymemberinfo_t*)ptrPInfoBytePtr;
+                    //Move offset to next party member
+                    ptrMemberBytePtr += sizeof(partymemberinfo_t);
+                    ptrPInfoBytePtr += sizeof(partymemberinfo_t);
+                    ImGui::Text("Idx %d %s - %s - Hp: %d Pow: %d", i, partyMembers[i].name, partyMembers[i].class_name, partyMembers[i].hp_pct, partyMembers[i].pow_pct);
+                }
+            }//Todo add exception
+            ImGui::TreePop();
+        }
+
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();

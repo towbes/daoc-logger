@@ -358,6 +358,23 @@ void __declspec(naked) entityNamesFunc() {
     }
 }
 
+//Party member info
+struct partymemberinfo_t {
+    int hp_pct;
+    int endu_pct;
+    int unknown;
+    int pow_pct;
+    unsigned char name[20];
+    unsigned char unknown2[24];
+    unsigned char class_name[24];
+    unsigned char unknown3[4616];
+};
+
+#define ptrPartyMemberInfo_x		0x01672AE0
+
+partymemberinfo_t partyMembers[8];
+
+
 typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
 _SendPacket Send;// = (_SendPacket)0x4281df;
 
