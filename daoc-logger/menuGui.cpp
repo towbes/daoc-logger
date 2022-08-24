@@ -43,7 +43,9 @@ void DrawGui() {
                 for (int i = 0; i < 100; i++)
                     if (EntityList[i] != 0) {
                         unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
-                        ImGui::Text("%d : 0x%x - %d - %s", i, EntityList[i], *(uint16_t*)(tempPtr + 0x23c), entNameList[i].name);
+                        //unencode level: ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96)/74) - 23
+                        //unencode health: (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23
+                        ImGui::Text("%d : 0x%x - Type: %d - %d - %s - Lvl: %d | hp: %d", i, EntityList[i], *(uint16_t*)(tempPtr + 0x28e) , *(uint16_t*)(tempPtr + 0x23c), entNameList[i].name, ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96)/74) - 23, (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23);
                     }
                 
                 ImGui::EndChild();
