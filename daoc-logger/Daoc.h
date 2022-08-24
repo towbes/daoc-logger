@@ -162,12 +162,6 @@ _getNPCEntityOffsetFromOid GetNPCEntityOffsetFromOid = (_getNPCEntityOffsetFromO
 typedef int(__cdecl* _getPlyrEntityOffsetFromListIndex)(int sessionId);
 _getPlyrEntityOffsetFromListIndex GetPlyrEntityOffsetFromListIndex = (_getPlyrEntityOffsetFromListIndex)0x4116ba;
 
-//Mid fun Hook at 0x411e2f - Entity Pointer in EAX, player list index in ESI
-//Address of signature = game.dll + 0x00011E2F
-const char* plyrEntityLoopPattern = "\xFF\x75\x00\x8B\xF0\xE8\x00\x00\x00\x00\x89\x45";
-const char* plyrEntityLoopMask = "xx?xxx????xx";
-int plyrEntityHookLen = 5;
-
 //Entity global variables/lists
 int objectId;
 uintptr_t ptrEntityChar;
@@ -185,14 +179,6 @@ int entbyoidCount;
 
 int entityListMax = *(int*)0xaa4c5c;
 
-
-
-//EntityUpdate Loop hook
-//Address of signature = game.dll + 0x00017DD6
-//0x417dd6
-const char* entityLoopPattern = "\x3B\x3D\x00\x00\x00\x00\x0F\x8C\x00\x00\x00\x00\x5F";
-const char* entityLoopMask = "xx????xx????x";
-int entityLoopHookLen = 6;
 
 bool findEntityByOffset(int offset) {
     for (int i = 0; i < 2000; i++) {
@@ -226,82 +212,18 @@ int findEntityByOid(short oid) {
     return 0;
 }
 
-//EntityUpdateLoopHook
-#define cmp_edi __asm _emit 0x3B __asm _emit 0x3D __asm _emit 0x5C __asm _emit 0x4C __asm _emit 0xAA __asm _emit 0x00
-void __declspec(naked) entityLoopFunc() {
-    __asm {
-        pushad
-        pushf
-        mov tempAddress, esi
-        mov entityOffset, edi
-    }
-
-    //Entity Table update
-    //subtract one because hook is right after the inc instruction
-    entityOffset -= 1;
-
-    //if (entityOffset == 0) {
-    //    //clear out the remainder of the list
-    //    memset(&EntityList[*(int*)0xaa4c5c], 0, sizeof(uintptr_t) * (2000 - *(int*)0xaa4c5c));
-    //}
-    //entity list current max at 0xaa4c5c
-
-    if (entityOffset > -1 && entityOffset < 2000) {
-        EntityList[(int)entityOffset] = tempAddress;
-    }
-    tempAddress = 0;
-    
-    //Skills table updates
-    plyrSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrSkillTableLoc));
-    for (pstCount = 0; pstCount < 150; pstCount++) {
-        plyrSkillTable[pstCount] = *(buff_t*)(plyrSkillTablePtr);
-        plyrSkillTablePtr += sizeof(buff_t);
-    }
-    //
-    ////UseSkills table updates
-    plyrUseSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSkillTableLoc));
-    for (pusCount = 0; pusCount < 150; pusCount++) {
-        plyrUseSkillTable[pusCount] = *(useSkill_t*)(plyrUseSkillTablePtr);
-        plyrUseSkillTablePtr += sizeof(useSkill_t);
-    }
-    //
-    ////Copy the buff table
-    plyrBuffTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrBuffTableLoc));
-    for (pbtCount = 0; pbtCount < 75; pbtCount++) {
-        plyrBuffTable[pbtCount] = *(buff_t*)(plyrBuffTablePtr);
-        plyrBuffTablePtr += sizeof(buff_t);
-    }
-    
-    __asm {
-        popf
-        popad
-        //instructions we overwrote
-        cmp_edi
-        jmp[jmpBackAddrEntity]
-    }
-}
 
 struct entName_t {
     char name[48];
 };
 
-//Entity names table hook
-//Entity Offset is at esp+0x14
-//Address of signature = game.dll + 0x000144E3 - after strncpy in packet function
-const char* entNameHookPattern = "\x6A\x00\x83\xC3\x00\x59";
-const char* entNameHookMask = "x?xx?x";
-int entityNamesHookLen = 5;
-DWORD jmpBackEntityNames;
-uintptr_t createPacketAddress;
-uintptr_t objIdAddress;
-std::map <short, std::string> entNameMap;
+//Entity names
 int entOffsetNum;
 int entNameLen;
 int entObjId;
 
 entName_t entNameList[2000];
 
-int a;
 
 void DumpEntities() {
     memset(EntityList, 0, sizeof(EntityList));
@@ -318,45 +240,6 @@ void DumpEntities() {
     }
 };
 
-//EntityUpdateLoopHook
-#define call_strncpy __asm _emit 0x6A __asm _emit 0x03 __asm _emit 0x83 __asm _emit 0xC3 __asm _emit 0x1D
-void __declspec(naked) entityNamesFunc() {
-    __asm {
-        pushad
-        //pushf
-        //push adds 0x24 to stack, pointer to the packet was at top of stack
-        mov eax, [esp + 0x24]
-        mov createPacketAddress, eax
-        //Beginning of packet address is objectId and on top of stack
-        mov eax, [esp]
-        mov objIdAddress, eax
-        //Entity offset was in eax and is now in esp + 0x10
-        //mov eax, [esp + 0x10]
-        //mov entOffsetNum, eax
-        //entName Len is in ESI
-        //mov entNameLen, esi
-    }
-
-    //at 0x19eb5c
-    entObjId = *(int*)(objIdAddress);
-    entOffsetNum = 0;
-    entOffsetNum = findEntityByOid((int)entObjId);
-    if (entOffsetNum > 0) {
-        memcpy(entNameList[(int)entOffsetNum].name, (char*)createPacketAddress, 48);
-    }
-
-    entOffsetNum = 0;
-    //static address 0x245e110
-    //memcpy(entNameList[(int)entOffsetNum].name, (char*)0x245E110, entNameLen);
-
-    __asm {
-        //popf
-        popad
-        //instructions we overwrote
-        call_strncpy
-        jmp[jmpBackEntityNames]
-    }
-}
 
 //Party member info
 struct partymemberinfo_t {
