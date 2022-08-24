@@ -89,46 +89,49 @@ typedef uintptr_t(__fastcall* _GetEntityPointer)(int entityOffset);
 _GetEntityPointer GetEntityPointer = (_GetEntityPointer)0x43589f;
 
 //table_dex:eax  entity_idx:ecx, Destination:stack0x4, count:stack0x8
-typedef uintptr_t(__cdecl* _GetEntityName)();
-_GetEntityName wGetEntityName = (_GetEntityName)0x4358ee;
-
-void* teax;
-void* tecx;
+uintptr_t wGetEntityName = 0x4358ee;
 
 
-uintptr_t __declspec(naked) GetEntityName(int table_idx, int entity_idx, char* Destination, size_t Count) {
+//credit atom0s for this function
+void __declspec(naked) __stdcall GetEntityName(int table_idx, int entity_idx, char* Destination, size_t Count) {
+        
     __asm {
-        //First get the Count off stack(0x24 + 0xC), and push to top of stack
-        mov eax, [esp + 0x10]
-        push eax
-        //Now get the destination off stack (0x24 + 0x4 + 0x8) and push to top of stack
-        mov eax, [esp + 0x10]
-        push eax
-        // mov table index off stack(0x24 + 0x8) into eax
-        mov eax, [esp + 0xc]
-        // mov entity index off stack(0x24 + 0x8 + 0x4) into ecx
-        mov ecx, [esp + 0x10]
-    }
+        //prepare stackframe
+        push ebp
+        mov ebp, esp
 
-    wGetEntityName();
+        //save the registers/flags
+        pushad
+        pushfd
 
-    __asm {
-        //skip the 4 stack values pushed from call to GetEntityName
-        add esp, 0x8
-        mov tecx, ecx; backup ecx
-        //pop off the top value of stack
-        pop ecx
-        //clean off the stack from this function
-        add esp, 0x10
-        //push the return value back onto stack
-        push ecx
-        //restore ecx
-        mov ecx, tecx
+        //Setup the call to game function GetEntityname
+        push Count
+        push[Destination]
+        push table_idx
+        mov ecx, entity_idx
+        pop eax
+
+        //call the game function
+        call wGetEntityName
+
+        //pop the two values off stack
+        pop eax
+        pop eax
+
+        //restore registers/flags
+        popfd
+        popad
+
+        //restore stack frame and return
+        mov esp, ebp
+        pop ebp
+        ret 0x10
+
     }
 }
 
 //Sanity checker before calling GetEntityPointer
-typedef char(__fastcall* _EntityPtrSanityCheck)(int entityListOffset);
+typedef bool(__fastcall* _EntityPtrSanityCheck)(int entityListOffset);
 _EntityPtrSanityCheck EntityPtrSanityCheck = (_EntityPtrSanityCheck)0x4358bf;
 int preCheck = *(int*)0xaa4c5c;
 int entityListOffset;
@@ -286,12 +289,16 @@ int a;
 
 void DumpEntities() {
     memset(EntityList, 0, sizeof(EntityList));
-    for (int i = 1; i < entityListMax; i++) {
-        tempAddress = GetEntityPointer(i);
-        if (tempAddress != 0) {
-            EntityList[i] = tempAddress;
-            GetEntityName(3, i, entNameList[i].name, 48);
+    memset(entNameList, 0, sizeof(entNameList));
+    for (int i = 0; i < entityListMax; i++) {
+        if (EntityPtrSanityCheck(i)) {
+            tempAddress = GetEntityPointer(i);
+            if (tempAddress) {
+                EntityList[i] = tempAddress;
+                GetEntityName(3, i, entNameList[i].name, 48);
+            }
         }
+
     }
 };
 

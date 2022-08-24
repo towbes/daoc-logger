@@ -28,6 +28,7 @@ void DrawGui() {
         if (dumpClicked & 1)
         {
             DumpEntities();
+            dumpClicked++;
         }
         // Child 1: no border, enable horizontal scrollbar
         {
