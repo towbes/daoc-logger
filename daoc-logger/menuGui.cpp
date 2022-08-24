@@ -40,12 +40,18 @@ void DrawGui() {
                 if (disable_mouse_wheel)
                     window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
                 ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), false, window_flags);
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < entityListMax; i++)
                     if (EntityList[i] != 0) {
                         unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
-                        //unencode level: ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96)/74) - 23
-                        //unencode health: (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23
-                        ImGui::Text("%d : 0x%x - Type: %d - %d - %s - Lvl: %d | hp: %d", i, EntityList[i], *(uint16_t*)(tempPtr + 0x28e) , *(uint16_t*)(tempPtr + 0x23c), entNameList[i].name, ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96)/74) - 23, (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23);
+                        const auto type = *(uint16_t*)(tempPtr + 0x28e);
+                        const auto objId = *(uint16_t*)(tempPtr + 0x23c);
+                        const auto level = ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96) / 74) - 23;//unencode level: ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96)/74) - 23
+                        const auto health = (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23;//unencode health: (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23
+                        const auto posx = *(float*)(tempPtr + 0x48) - zoneXoffset;
+                        const auto posy = *(float*)(tempPtr + 0x370) - zoneYoffset;
+                        const auto posz = *(float*)(tempPtr + 0xE7C);
+                        const auto heading = ((((*(uint16_t*)(tempPtr + 0xcb6) + 0x800) * 0x168) / 0x1000) % 0x168); //from 0x41948d
+                        ImGui::Text("%d : 0x%x - Type: %d - %d - %s - Lvl: %d | hp: %d | %.0f %.0f %.0f %d", i, EntityList[i], type, objId, entNameList[i].name, level, health, posx, posy, posz, heading);
                     }
                 
                 ImGui::EndChild();
@@ -126,6 +132,50 @@ void DrawGui() {
             ImGui::TreePop();
         }
 
+        if (ImGui::TreeNode("Spells"))
+        {
+            static int spellClicked = 0;
+            if (ImGui::Button("Dump Spells"))
+                spellClicked++;
+            if (spellClicked & 1)
+            {
+
+                DumpSpells();
+                spellClicked++;
+            }
+            ImGui::SameLine();
+            static int useSpellClicked = 0;
+            static char spellnum[10] = "";
+            if (ImGui::Button("Use Spell"))
+                useSpellClicked++;
+            if (useSpellClicked & 1)
+            {
+
+                UseSpell(1, atoi(spellnum));
+                useSpellClicked++;
+            }
+            ImGui::SameLine();
+
+            ImGui::InputText("##spellnum", spellnum, IM_ARRAYSIZE(spellnum));
+            // Child 1: no border, enable horizontal scrollbar
+            {
+                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                static bool disable_mouse_wheel = false;
+                ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
+                if (disable_mouse_wheel)
+                    window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
+                ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), false, window_flags);
+                for (int i = 0; i < 150; i++) {
+                    if (plyrUseSpellTable[i].name[0] != '\0') {
+                        ImGui::Text("Spell %d: %s", i, plyrUseSpellTable[i].name);
+                    }
+                }
+
+                ImGui::EndChild();
+            }
+            ImGui::TreePop();
+        }
+
         if (ImGui::TreeNode("PartyInfo"))
         {
             if (ptrPartyMemberInfo_x != NULL) {
@@ -146,8 +196,12 @@ void DrawGui() {
         }
         if (ImGui::TreeNode("PlayerInfo"))
         {
+            const auto posx = playerPosition->pos_x - zoneXoffset;
+            const auto posy = playerPosition->pos_y - zoneYoffset;
+            const auto posz = playerPosition->pos_z;
+            const auto heading = ((((playerPosition->heading + 0x800) * 0x168) / 0x1000) % 0x168);
             ImGui::Text("Position (x,y,z,heading):");
-            ImGui::Text("%f %f %f %d", playerPosition->pos_x, playerPosition->pos_y, playerPosition->pos_z, playerPosition->heading);
+            ImGui::Text("%.0f %.0f %.0f %d", posx, posy, posz, heading);
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Inventory"))
@@ -186,6 +240,13 @@ void LoadHooks() {
 
     //UseSkill Address
     UseSkill = (_UseSkill)(ScanModIn((char*)funcUseSkillPattern, (char*)funcUseSkillMask, "game.dll"));
+
+    //Player spells
+    plyrUseSpellTableTemp = (void*)(ScanModIn((char*)plyrUseSpellTablePattern, (char*)plyrUseSpellTableMask, "game.dll"));
+    plyrUseSpellTableLoc = (DWORD)((size_t)plyrUseSpellTableTemp + 0x3);
+
+    //UseSpell Address
+    UseSpell = (_UseSpell)(ScanModIn((char*)funcUseSpellPattern, (char*)funcUseSpellMask, "game.dll"));
 
     //Player position
     void* ptrPlayerPosition = (void*)(ScanModIn((char*)ptrPlayerPositionPattern, (char*)ptrPlayerPositionMask, "game.dll"));

@@ -150,13 +150,14 @@ DWORD WINAPI Init(HMODULE hModule)
     
 
     (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)origWndProc);
-    //original
-    WriteMem((char*)d3d9Device[17], oPresBytes, 5);
-    WriteMem((char*)d3d9Device[16], oResetBytes, 5);
+
     //mojo
     //WriteMem((char*)d3d9Device[17], oPresBytes, 7);
     //WriteMem((char*)d3d9Device[16], oResetBytes, 10);
     cleanupImgui();
+    //original
+    WriteMem((char*)d3d9Device[17], oPresBytes, 5);
+    WriteMem((char*)d3d9Device[16], oResetBytes, 5);
     FreeLibraryAndExitThread(hModule, 0);
 
     return 0;
