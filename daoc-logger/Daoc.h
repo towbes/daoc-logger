@@ -98,22 +98,6 @@ void* tecx;
 
 uintptr_t __declspec(naked) GetEntityName(int table_idx, int entity_idx, char* Destination, size_t Count) {
     __asm {
-        //pushad
-        //mov eax, table_idx
-        //mov ecx, entity_idx
-        //push Count
-        //push Destination
-        // 
-        ////First get the Count off stack(0x24 + 0xC), and push to top of stack
-        //mov eax, [esp+0x30]
-        //push eax
-        ////Now get the destination off stack (0x24 + 0x4 + 0x8) and push to top of stack
-        //mov eax, [esp+0x30]
-        //push eax
-        //// mov table index off stack(0x24 + 0x8) into eax
-        //mov eax, [esp+0x2C]
-        //// mov entity index off stack(0x24 + 0x8 + 0x4) into ecx
-        //mov ecx, [esp+0x30]
         //First get the Count off stack(0x24 + 0xC), and push to top of stack
         mov eax, [esp + 0x10]
         push eax
@@ -129,7 +113,6 @@ uintptr_t __declspec(naked) GetEntityName(int table_idx, int entity_idx, char* D
     wGetEntityName();
 
     __asm {
-        //popad
         //skip the 4 stack values pushed from call to GetEntityName
         add esp, 0x8
         mov tecx, ecx; backup ecx
