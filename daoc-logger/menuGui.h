@@ -2,3 +2,5 @@
 
 
 void DrawGui();
+
+void LoadHooks();

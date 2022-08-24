@@ -53,6 +53,14 @@ unsigned char* plyrBuffTablePtr;
 int pbtCount;
 
 
+void DumpBuffs() {
+    plyrBuffTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrBuffTableLoc));
+    for (pbtCount = 0; pbtCount < 75; pbtCount++) {
+        plyrBuffTable[pbtCount] = *(buff_t*)(plyrBuffTablePtr);
+        plyrBuffTablePtr += sizeof(buff_t);
+    }
+}
+
 //Skills
 struct useSkill_t {
     unsigned char name[72];
@@ -81,6 +89,13 @@ DWORD plyrUseSkillTableLoc;
 unsigned char* plyrUseSkillTablePtr;
 int pusCount;
 
+void DumpSkills() {
+    plyrUseSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSkillTableLoc));
+    for (pusCount = 0; pusCount < 150; pusCount++) {
+        plyrUseSkillTable[pusCount] = *(useSkill_t*)(plyrUseSkillTablePtr);
+        plyrUseSkillTablePtr += sizeof(useSkill_t);
+    }
+}
 
 //Each entity is 0x19B8 long?
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
@@ -93,6 +108,7 @@ uintptr_t wGetEntityName = 0x4358ee;
 
 
 //credit atom0s for this function
+//use __stdcall to make stack setup/cleanup simpler
 void __declspec(naked) __stdcall GetEntityName(int table_idx, int entity_idx, char* Destination, size_t Count) {
         
     __asm {

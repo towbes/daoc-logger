@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "Hook.h"
-#include "Scan.h"
 
 #include "PacketProcessor.h"
 #include "mem.h"
@@ -19,8 +18,8 @@ static WNDPROC origWndProc = nullptr;
 static WNDPROC oWndProc = nullptr;
 void* d3d9Device[119];
 
-char oPresBytes[5];
-char oResetBytes[5];
+char oPresBytes[11];
+char oResetBytes[11];
 
 bool done = false;
 
@@ -118,13 +117,23 @@ DWORD WINAPI Init(HMODULE hModule)
         memcpy(oPresBytes, (char*)d3d9Device[17], 5);
         memcpy(oResetBytes, (char*)d3d9Device[16], 5);
 
-        //std::cout << "reset at: 0x" << std::hex << d3d9Device[16] << std::endl;
+        //mojo
+        //memcpy(oPresBytes, (char*)d3d9Device[17], 7);
+        //memcpy(oResetBytes, (char*)d3d9Device[16], 10);
+
+        std::cout << "present: 0x" << std::hex << d3d9Device[17] << " reset: 0x" << d3d9Device[16] << std::endl;
         oPresent = (tPresent)TrampHook((char*)d3d9Device[17], (char*)hkPresent, 5);
         oReset = (tReset)TrampHook((char*)d3d9Device[16], (char*)hkReset, 5);
+        // mojo
+        //oPresent = (tPresent)TrampHook((char*)d3d9Device[17], (char*)hkPresent, 7);
+        //oReset = (tReset)TrampHook((char*)d3d9Device[16], (char*)hkReset, 10);
     }
     window = GetProcessWindow();
     origWndProc = (WNDPROC)GetWindowLongPtr(window, GWL_WNDPROC);
     oWndProc = (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)WndProc);
+
+    //Daoc Addresses
+    LoadHooks();
 
     while (true) {
         if (GetAsyncKeyState(VK_RCONTROL) & 1) {
@@ -138,11 +147,15 @@ DWORD WINAPI Init(HMODULE hModule)
     //	}
     //	FreeConsole();
     //#endif 
-    //
+    
 
     (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)origWndProc);
+    //original
     WriteMem((char*)d3d9Device[17], oPresBytes, 5);
     WriteMem((char*)d3d9Device[16], oResetBytes, 5);
+    //mojo
+    //WriteMem((char*)d3d9Device[17], oPresBytes, 7);
+    //WriteMem((char*)d3d9Device[16], oResetBytes, 10);
     cleanupImgui();
     FreeLibraryAndExitThread(hModule, 0);
 
