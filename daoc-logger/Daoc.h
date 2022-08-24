@@ -213,6 +213,47 @@ int entbyoidCount;
 int entityListMax = *(int*)0xaa4c5c;
 
 
+
+struct entName_t {
+    char name[48];
+};
+
+//Entity names
+int entOffsetNum;
+int entNameLen;
+int entObjId;
+
+entName_t entNameList[2000];
+
+
+void DumpEntities() {
+    memset(EntityList, 0, sizeof(EntityList));
+    memset(entNameList, 0, sizeof(entNameList));
+    for (int i = 0; i < entityListMax; i++) {
+        if (EntityPtrSanityCheck(i)) {
+            tempAddress = GetEntityPointer(i);
+            if (tempAddress) {
+                EntityList[i] = tempAddress;
+                GetEntityName(3, i, entNameList[i].name, 48);
+            }
+        }
+
+    }
+};
+
+int findEntityByName(char* name) {
+    for (int i = 0; i < 2000; i++) {
+        if (EntityPtrSanityCheck(i)) {
+            std::string temp1 = name;
+            std::string temp2 = entNameList[i].name;
+            if (temp1 == temp2) {
+                    return i;
+            }
+        }
+    }
+    return false;
+}
+
 bool findEntityByOffset(int offset) {
     for (int i = 0; i < 2000; i++) {
         if ((int)EntityList[i] == 0) {
@@ -245,33 +286,6 @@ int findEntityByOid(short oid) {
     return 0;
 }
 
-
-struct entName_t {
-    char name[48];
-};
-
-//Entity names
-int entOffsetNum;
-int entNameLen;
-int entObjId;
-
-entName_t entNameList[2000];
-
-
-void DumpEntities() {
-    memset(EntityList, 0, sizeof(EntityList));
-    memset(entNameList, 0, sizeof(entNameList));
-    for (int i = 0; i < entityListMax; i++) {
-        if (EntityPtrSanityCheck(i)) {
-            tempAddress = GetEntityPointer(i);
-            if (tempAddress) {
-                EntityList[i] = tempAddress;
-                GetEntityName(3, i, entNameList[i].name, 48);
-            }
-        }
-
-    }
-};
 
 
 //Party member info
@@ -485,6 +499,28 @@ void __declspec(naked) runSpeedHookFunc() {
     }
 }
 
+//Set target func
+
+typedef void(__cdecl* _SetTarget)(int entIdx, bool hasTarget);
+_SetTarget SetTarget;// = (_SellRequest)0x42b2e3;
+
+//This function updates the UI with current target set via SetTarget
+typedef void(__cdecl* _SetTargetUI)();
+_SetTargetUI SetTargetUI; //= (_SetTargetUI)0x48f194;
+
+//Address of signature = game.dll + 0x0003A8F3
+const char* funcSetTargetPattern = "\x55\x8B\xEC\x56\x8B\x75\x00\x3B\x35";
+const char* funcSettargetMask = "xxxxxx?xx";
+
+//Address of signature = game.dll + 0x0008F194
+const char* funcSetTargetUIPattern = "\x55\x8B\xEC\x81\xEC\x00\x00\x00\x00\xFF\x35";
+const char* funcSetTargetUIMask = "xxxxx????xx";
+
+//targeting
+int currentTargetEnt = *(int*)0x10498b0;
+
+//Player info
+//player entity ptr 0x104a7f0
 
 //item structure starts at 0xf9b8d0
 struct item_t {

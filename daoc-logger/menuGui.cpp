@@ -21,7 +21,14 @@ void DrawGui() {
         static float f = 0.0f;
         static int counter = 0;
 
-        ImGui::Begin("Daoc Logger");                          // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Daoc Logger");                          
+
+        //update the zone offset values
+        zoneXoffset = *(float*)0x149581C;
+        zoneYoffset = *(float*)0x1495820;
+
+        //update current target value
+        currentTargetEnt = *(int*)0x10498b0;
 
         if (ImGui::TreeNode("Entities")) {
             static int dumpClicked = 0;
@@ -32,6 +39,27 @@ void DrawGui() {
                 DumpEntities();
                 dumpClicked++;
             }
+            ImGui::SameLine();
+            static int setTargetClicked = 0;
+            static char targetnum[48] = "";
+            if (ImGui::Button("Set Target"))
+                setTargetClicked++;
+            if (setTargetClicked & 1)
+            {
+                //SetTarget(atoi(targetnum), 0);
+                //SetTargetUI();
+                int tarOffset = 0;
+                tarOffset = findEntityByName(targetnum);
+                if (tarOffset > 0) {
+                    SetTarget(tarOffset, 0);
+                    SetTargetUI();
+                }
+
+                setTargetClicked++;
+            }
+            ImGui::SameLine();
+
+            ImGui::InputText("##targetnum", targetnum, IM_ARRAYSIZE(targetnum));
             // Child 1: no border, enable horizontal scrollbar
             {
                 ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
@@ -43,7 +71,7 @@ void DrawGui() {
                 for (int i = 0; i < entityListMax; i++)
                     if (EntityList[i] != 0) {
                         unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[i]);
-                        const auto type = *(uint16_t*)(tempPtr + 0x28e);
+                        const auto type = *(uint8_t*)(tempPtr + 0x28e);
                         const auto objId = *(uint16_t*)(tempPtr + 0x23c);
                         const auto level = ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96) / 74) - 23;//unencode level: ((*(uint32_t*)(tempPtr + 0x60) ^ 0xCB96)/74) - 23
                         const auto health = (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23;//unencode health: (*(uint32_t*)(tempPtr + 0x228) ^ 0xbe00) / 0x22 - 0x23
@@ -247,10 +275,15 @@ void LoadHooks() {
 
     //UseSpell Address
     UseSpell = (_UseSpell)(ScanModIn((char*)funcUseSpellPattern, (char*)funcUseSpellMask, "game.dll"));
+    
 
     //Player position
     void* ptrPlayerPosition = (void*)(ScanModIn((char*)ptrPlayerPositionPattern, (char*)ptrPlayerPositionMask, "game.dll"));
     DWORD ptrPlayerPositionLocation = (DWORD)((size_t)ptrPlayerPosition + 0x2);
     void* playerPositionPtr = *(void**)ptrPlayerPositionLocation;
     playerPosition = *(playerpos_t**)playerPositionPtr;
+
+    //target function
+    SetTarget = (_SetTarget)(ScanModIn((char*)funcSetTargetPattern, (char*)funcSettargetMask, "game.dll"));
+    SetTargetUI = (_SetTargetUI)(ScanModIn((char*)funcSetTargetUIPattern, (char*)funcSetTargetUIMask, "game.dll"));
 }
