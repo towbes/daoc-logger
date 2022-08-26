@@ -103,6 +103,14 @@ HRESULT APIENTRY hkReset(LPDIRECT3DDEVICE9 pDevice, D3DPRESENT_PARAMETERS* pPres
 
 DWORD WINAPI Init(HMODULE hModule)
 {
+
+    uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"game.dll");
+    char* name = (char*)(moduleBase + 0xc4a6a8);
+    if (name[0] == 0x59) {
+        FreeLibraryAndExitThread(hModule, 0);
+        return 0;
+    }
+
     //#ifdef _DEBUG
     //	//Create Console
     //	AllocConsole();
@@ -110,6 +118,8 @@ DWORD WINAPI Init(HMODULE hModule)
     //	freopen_s(&f, "CONOUT$", "w", stdout);
     //	std::cout << "DLL got injected!" << std::endl;
     //#endif 
+
+
 
     void* ptrPresent = NULL;
     void* ptrReset = NULL;
