@@ -19,3 +19,5 @@ HWND GetProcessWindow();
 bool GetD3D9Device(void** pTable, size_t Size);
 
 void DrawFilledRect(int x, int y, int w, int h, D3DCOLOR color, IDirect3DDevice9* dev);
+
+bool isModuleLoaded(const wchar_t* modulename, HWND hWnd);

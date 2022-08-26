@@ -11,6 +11,7 @@
 #include <thread>
 #include <chrono>
 #include "commctrl.h"
+#include <TlHelp32.h>
 
 //d3d9
 #include <d3d9.h>
