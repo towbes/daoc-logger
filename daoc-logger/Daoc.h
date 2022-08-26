@@ -28,6 +28,19 @@ _UseSkill UseSkill;// = (_UseSkill)0x42b5d5;
 const char* funcUseSkillPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x0F\x85\x00\x00\x00\x00\xD9\x05\x00\x00\x00\x00\x57\x6A\x00\x33\xC0\x59\x8D\x7D\x00\xF3\x00\x8B\x0D\x00\x00\x00\x00\x5F\xD9\x41\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\x80\x4D\xFB\x00\x53\x33\xDB\x38\x59\x00\x56\x74\x00\xD9\x05\x00\x00\x00\x00\xD9\x41\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x3B\xC3\x75\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\x80\x4D\xFB\x00\xD9\x05\x00\x00\x00\x00\xD9\x05\x00\x00\x00\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\xE8\x00\x00\x00\x00\x84\xC0\x74\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x66\x89\x00\x00\x8B\x08\x89\x4D\x00\x8B\x48\x00\x89\x4D\x00\x8B\x48\x00\x8B\x40\x00\x89\x45\x00\x8A\x45\x00\x88\x45\x00\x8A\x45\x00\x8D\x75\x00\x89\x4D\x00\x88\x45\x00\xE8\x00\x00\x00\x00\x53\x6A\x00\x8B\xC6\x68";
 const char* funcUseSkillMask = "xxxxx?xxxxxx?xx????xx????xx?xxxxx?x?xx????xxx?xxxxxx?x?xxx?xxxxx?xx?xx????xx?xxxxxx?x?xxx?x????????xx????xxxx?x????????xxx?xxx?x????????xx????xxxx?xxx?xx????xx????xxxxxx?x?x????xxx?xxx?x????????xx????xxxx?xxx?x????????xx??xxxx?xx?xx?xx?xx?xx?xx?xx?xx?xx?xx?xx?x????xx?xxx";
 
+//Player HP Address
+//  int hp
+//  int pow
+//  int endu
+//Address of signature = game.dll + 0x000B6617  at +0x1
+const char* ptrPlyrHpPattern = "\xA3\x00\x00\x00\x00\x00\x00\x00\x00\x59\xF7\xF9";
+const char* ptrPlyrHpMask = "x????????xxx";
+
+void* plyrHpPtr;
+int plyr_hp;
+int plyr_pow;
+int plyr_endu;
+
 struct useSpell_t {
     char name[32];
     char unknown[60];
@@ -366,8 +379,14 @@ bool changeRunSpeed = false;
 const char* ptrPlayerPositionPattern = "\x89\x3D\x00\x00\x00\x00\xF3";
 const char* ptrPlayerPositionMask = "xx????x";
 
-float zoneXoffset = *(float*)0x149581C;
-float zoneYoffset = *(float*)0x1495820;
+//Address of signature = game.dll + 0x00062F4C  ZoneYOffset at +0x2 , ZoneXOffset at + 0xF
+const char* zoneOffsetPattern = "\xD9\x05\x00\x00\x00\x00\xD8\x45\x00\xD9\x5C\x00\x00\xD9\x05\x00\x00\x00\x00\xD8\x45\x00\xD9\x1C\x00\x68\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x8B\x7D";
+const char* zoneOffsetMask = "xx????xx?xx??xx????xx?xx?x????x????xx";
+
+void* ptrZoneXoffset;
+float zoneXoffset;// = *(float*)0x149581C;
+void* ptrZoneYoffset;
+float zoneYoffset;// = *(float*)0x1495820;
 
 //autorun pattern
 const char* autorunPattern = "\x39\x3D\x00\x00\x00\x00\x75\x00\x39\x3D\x00\x00\x00\x00\x75";
@@ -517,10 +536,11 @@ const char* funcSetTargetUIPattern = "\x55\x8B\xEC\x81\xEC\x00\x00\x00\x00\xFF\x
 const char* funcSetTargetUIMask = "xxxxx????xx";
 
 //targeting
-int currentTargetEnt = *(int*)0x10498b0;
-
-//Player info
-//player entity ptr 0x104a7f0
+int currentTargetEntOffset;// = *(int*)0x10498b0;
+//Address of signature = game.dll + 0x00024DA2  + 0x2
+const char* currentTargetPattern = "\x89\x0D\x00\x00\x00\x00\x89\x0D\x00\x00\x00\x00\x89\x0D\x00\x00\x00\x00\x5F";
+const char* currentTargetMask = "xx????xx????xx????x";
+void* ptrCurrentTargetEntOffset;
 
 //item structure starts at 0xf9b8d0
 struct item_t {
@@ -530,6 +550,14 @@ struct item_t {
     unsigned char unknown2[312];
 };
 
+//DOL client does not seem to have itemID at same location
+//uintptr_t* ValLoc = (uintptr_t*)(0xf9b8d0 + offset);
+//Address of signature = game.dll + 0x0001BAB8 at +0x1
+const char* invStartPattern = "\xBF\x00\x00\x00\x00\xF3\x00\xE8\x00\x00\x00\x00\xEB";
+const char* invStartMask = "x????x?x????x";
+void* ptrInventory;
+
+
 
 //Move item Function
 //Slot reference: https://github.com/Dawn-of-Light/DOLSharp/blob/9af87af011497c3fda852559b01a269c889b162e/GameServer/gameutils/IGameInventory.cs
@@ -537,7 +565,13 @@ struct item_t {
 //Backpack = 40-79
 //count = 0 for non stacks
 typedef void (__cdecl* _MoveItem)(int toSlot, int fromSlot, int count);
-_MoveItem MoveItem = (_MoveItem)0x42a976;
+_MoveItem MoveItem; //  = (_MoveItem)0x42a976;
+
+//Address of signature = game.dll + 0x0002A976
+const char* funcMoveItemPattern = "\x55\x8B\xEC\x51\x51\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x56\x6A\x00\x58\xE8\x00\x00\x00\x00\x66\x89\x00\x00\x66\x8B\x00\x00\x66\x89";
+const char* funcMoveItemMask = "xxxxxxxxxxx?x?xx?xx????xx??xx??xx";
+
+
 
 
 /*
@@ -624,7 +658,6 @@ void p_filterItems()
             std::cout << recvBuffer[i];
         }
         printf("\n");
-        Sleep(50);
         if (badItemIdList.find(itemId) != badItemIdList.end()) {
         //if (goodItemIdList.find(itemId) == goodItemIdList.end() && m_readItemId(slotId) == itemId) {
             printf("Dropping slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
@@ -638,14 +671,14 @@ void m_cleanInventory()
 {
     //look through all slots
     for (int slotNum = 40; slotNum < 80; slotNum++) {
+        unsigned char* tmpPtr = reinterpret_cast<unsigned char*>(ptrInventory);
         size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
-        uintptr_t* ValLoc2 = (uintptr_t*)(0xf9b8d0 + offset);
-        item_t itemTemp = (item_t&)*ValLoc2;
+        tmpPtr += offset;
+        item_t itemTemp = *(item_t*)tmpPtr;
         printf("Slot %u, ItemHex: %02x, ItemId - %u, ItemName - %s\n", slotNum, itemTemp.itemId, itemTemp.itemId, itemTemp.itemName);
         if (badItemIdList.find(itemTemp.itemId) != badItemIdList.end() && m_readItemId(slotNum) == itemTemp.itemId) {
             MoveItem(1, slotNum, 0);
         }
-        Sleep(10);
     }
 
 
@@ -654,6 +687,7 @@ void m_cleanInventory()
     /*
     uintptr_t* ValLoc2 = (uintptr_t*)(0xf9b8d0 + sizeof(item_t));
     item_t slot41 = (item_t&)*ValLoc2;
+
     printf("Slot41loc - %p, ItemHex: %02x, ItemId - %u, ItemName - %s\n", ValLoc2, slot41.itemId, slot41.itemId, slot41.itemName);
     */
 }
@@ -662,10 +696,11 @@ void m_cleanInventory()
 int m_readItemId(int slotNum)
 {
     
-    size_t offset = (slotNum - 40) * 0x1D4; //* sizeof(item_t);
-    uintptr_t* ValLoc = (uintptr_t*)(0xf9b8d0 + offset);
+    size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
+    unsigned char* tmpPtr = reinterpret_cast<unsigned char*>(ptrInventory);
+    tmpPtr += offset;
 
-    return (int&)*ValLoc;
+    return *(int*)tmpPtr;
 
     //printf("Slot40loc - %p, ItemHex: %02x, ItemId - %u, ItemName - %s\n", ValLoc, slot40.itemId, slot40.itemId, slot40.itemName);
     
@@ -674,4 +709,12 @@ int m_readItemId(int slotNum)
     item_t slot41 = (item_t&)*ValLoc2;
     printf("Slot41loc - %p, ItemHex: %02x, ItemId - %u, ItemName - %s\n", ValLoc2, slot41.itemId, slot41.itemId, slot41.itemName);
     */
+}
+
+void sell_inv() {
+    for (int i = 47; i < 80; i++) {
+        if (m_readItemId(i) > 0) {
+            SellRequest(i);
+        }
+    }
 }

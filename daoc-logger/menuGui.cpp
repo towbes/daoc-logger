@@ -24,11 +24,11 @@ void DrawGui() {
         ImGui::Begin("Daoc Logger");                          
 
         //update the zone offset values
-        zoneXoffset = *(float*)0x149581C;
-        zoneYoffset = *(float*)0x1495820;
+        zoneXoffset = *(float*)ptrZoneXoffset;
+        zoneYoffset = *(float*)ptrZoneYoffset;
 
         //update current target value
-        currentTargetEnt = *(int*)0x10498b0;
+        currentTargetEntOffset = *(int*)ptrCurrentTargetEntOffset;
 
         if (ImGui::TreeNode("Entities")) {
             static int dumpClicked = 0;
@@ -230,15 +230,45 @@ void DrawGui() {
             const auto heading = ((((playerPosition->heading + 0x800) * 0x168) / 0x1000) % 0x168);
             ImGui::Text("Position (x,y,z,heading):");
             ImGui::Text("%.0f %.0f %.0f %d", posx, posy, posz, heading);
+            unsigned char* tempPtr = reinterpret_cast<unsigned char*>(plyrHpPtr);
+            plyr_hp = *(int*)tempPtr;
+            plyr_pow = *(int*)(tempPtr + 0x4);
+            plyr_endu = *(int*)(tempPtr + 0x8);
+            ImGui::Text("HP: %d", plyr_hp);
+            ImGui::Text("Pow: %d", plyr_pow);
+            ImGui::Text("Endu: %d", plyr_endu);
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Inventory"))
         {
+            static int cleanInvClicked = 0;
+            if (ImGui::Button("Clean Inventory"))
+                cleanInvClicked++;
+            ImGui::SameLine();
+            ImGui::Text("Drops bad items");
+            if (cleanInvClicked & 1)
+            {
+
+                m_cleanInventory();
+                cleanInvClicked++;
+            }
+            static int sellInvClicked = 0;
+            if (ImGui::Button("Sell Inventory"))
+                sellInvClicked++;
+            ImGui::SameLine();
+            ImGui::Text("Sells slots 47-80 (start of backpack is 40)");
+            if (sellInvClicked & 1)
+            {
+
+                sell_inv();
+                sellInvClicked++;
+            }
             //look through all slots
             for (int slotNum = 40; slotNum < 80; slotNum++) {
                 size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
-                uintptr_t* ValLoc2 = (uintptr_t*)(0xf9b8d0 + offset);
-                item_t itemTemp = (item_t&)*ValLoc2;
+                unsigned char* tmpPtr = reinterpret_cast<unsigned char*>(ptrInventory);
+                tmpPtr += offset;
+                item_t itemTemp = (item_t&)*tmpPtr;
                 ImGui::Text("Slot %u, ItemHex: %02x, ItemId - %u, ItemName - %s\n", slotNum, itemTemp.itemId, itemTemp.itemId, itemTemp.itemName);
             }
             ImGui::TreePop();
@@ -276,12 +306,39 @@ void LoadHooks() {
     //UseSpell Address
     UseSpell = (_UseSpell)(ScanModIn((char*)funcUseSpellPattern, (char*)funcUseSpellMask, "game.dll"));
     
+    //Player hp/pow/endu
+    void* ptrPlayerHp = (void*)(ScanModIn((char*)ptrPlyrHpPattern, (char*)ptrPlyrHpMask, "game.dll"));
+    DWORD ptrPlyrHpLocation = (DWORD)((size_t)ptrPlayerHp + 0x1);
+    plyrHpPtr = *(void**)ptrPlyrHpLocation;
 
     //Player position
     void* ptrPlayerPosition = (void*)(ScanModIn((char*)ptrPlayerPositionPattern, (char*)ptrPlayerPositionMask, "game.dll"));
     DWORD ptrPlayerPositionLocation = (DWORD)((size_t)ptrPlayerPosition + 0x2);
     void* playerPositionPtr = *(void**)ptrPlayerPositionLocation;
     playerPosition = *(playerpos_t**)playerPositionPtr;
+
+    //Zone x and y offsets
+    void* ptrZoneOffset = (void*)(ScanModIn((char*)zoneOffsetPattern, (char*)zoneOffsetMask, "game.dll"));
+    DWORD locZoneYoffset = (DWORD)((size_t)ptrZoneOffset + 0x2);
+    DWORD locZoneXoffset = (DWORD)((size_t)ptrZoneOffset + 0xF);
+    ptrZoneYoffset = *(void**)locZoneYoffset;
+    ptrZoneXoffset = *(void**)locZoneXoffset;
+
+    //inventory
+    void* ptrInventoryTemp = (void*)(ScanModIn((char*)invStartPattern, (char*)invStartMask, "game.dll"));
+    DWORD locInventory = (DWORD)((size_t)ptrInventoryTemp + 0x1);
+    ptrInventory = *(void**)locInventory;
+
+    //MoveItem function
+    MoveItem = (_MoveItem)(ScanModIn((char*)funcMoveItemPattern, (char*)funcMoveItemMask, "game.dll"));
+
+    //SellRequest
+    SellRequest = (_SellRequest)(ScanModIn((char*)sellRequestPattern, (char*)sellRequestMask, "game.dll"));
+
+    //Current target ent offset
+    void* ptrCurrTarget = (void*)(ScanModIn((char*)currentTargetPattern, (char*)currentTargetMask, "game.dll"));
+    DWORD locCurrTarget = (DWORD)((size_t)ptrCurrTarget + 0x2);
+    ptrCurrentTargetEntOffset = *(void**)locCurrTarget;
 
     //target function
     SetTarget = (_SetTarget)(ScanModIn((char*)funcSetTargetPattern, (char*)funcSettargetMask, "game.dll"));

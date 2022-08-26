@@ -111,19 +111,36 @@ DWORD WINAPI Init(HMODULE hModule)
     //	std::cout << "DLL got injected!" << std::endl;
     //#endif 
 
+    void* ptrPresent = NULL;
+    void* ptrReset = NULL;
+
     if (GetD3D9Device(d3d9Device, sizeof(d3d9Device)))
     {
         //write original bytes to buffer for cleanup later
-        memcpy(oPresBytes, (char*)d3d9Device[17], 5);
-        memcpy(oResetBytes, (char*)d3d9Device[16], 5);
+        //memcpy(oPresBytes, (char*)d3d9Device[17], 5);
+        //memcpy(oResetBytes, (char*)d3d9Device[16], 5);
 
         //mojo
         //memcpy(oPresBytes, (char*)d3d9Device[17], 7);
         //memcpy(oResetBytes, (char*)d3d9Device[16], 10);
 
-        std::cout << "present: 0x" << std::hex << d3d9Device[17] << " reset: 0x" << d3d9Device[16] << std::endl;
-        oPresent = (tPresent)TrampHook((char*)d3d9Device[17], (char*)hkPresent, 5);
-        oReset = (tReset)TrampHook((char*)d3d9Device[16], (char*)hkReset, 5);
+        //std::cout << "present: 0x" << std::hex << d3d9Device[17] << " reset: 0x" << d3d9Device[16] << std::endl;
+        char* tempPtr = (char*)d3d9Device[17];
+        tempPtr += 0x2f;
+        ptrPresent = *(void**)tempPtr;
+        
+        char* tempPtr2 = (char*)d3d9Device[16];
+        tempPtr2 += 0x1E;
+        ptrReset = *(void**)tempPtr2;
+        
+
+        //write original bytes to buffer for cleanup later
+        memcpy(oPresBytes, *(char**)ptrPresent, 5);
+        memcpy(oResetBytes, *(char**)ptrReset, 5);
+        oPresent = (tPresent)TrampHook(*(char**)ptrPresent, (char*)hkPresent, 5);
+        oReset = (tReset)TrampHook(*(char**)ptrReset, (char*)hkReset, 5);
+        //oPresent = (tPresent)TrampHook((char*)d3d9Device[17], (char*)hkPresent, 5);
+        //oReset = (tReset)TrampHook((char*)d3d9Device[16], (char*)hkReset, 5);
         // mojo
         //oPresent = (tPresent)TrampHook((char*)d3d9Device[17], (char*)hkPresent, 7);
         //oReset = (tReset)TrampHook((char*)d3d9Device[16], (char*)hkReset, 10);
@@ -154,10 +171,16 @@ DWORD WINAPI Init(HMODULE hModule)
     //mojo
     //WriteMem((char*)d3d9Device[17], oPresBytes, 7);
     //WriteMem((char*)d3d9Device[16], oResetBytes, 10);
-    cleanupImgui();
-    //original
-    WriteMem((char*)d3d9Device[17], oPresBytes, 5);
-    WriteMem((char*)d3d9Device[16], oResetBytes, 5);
+    
+    ////original
+    //WriteMem((char*)d3d9Device[17], oPresBytes, 5);
+    //WriteMem((char*)d3d9Device[16], oResetBytes, 5);
+    if (ptrPresent != NULL && ptrReset != NULL) {
+        cleanupImgui();
+        WriteMem(*(char**)ptrPresent, oPresBytes, 5);
+        WriteMem(*(char**)ptrReset, oResetBytes, 5);
+    }
+
     FreeLibraryAndExitThread(hModule, 0);
 
     return 0;
