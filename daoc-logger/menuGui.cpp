@@ -20,9 +20,9 @@ void DrawGui() {
     else {
         static float f = 0.0f;
         static int counter = 0;
-
+        ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Once);
         ImGui::Begin("Daoc Logger");                          
-
+        
         //update the zone offset values
         zoneXoffset = *(float*)ptrZoneXoffset;
         zoneYoffset = *(float*)ptrZoneYoffset;
@@ -39,17 +39,16 @@ void DrawGui() {
                 DumpEntities();
                 dumpClicked++;
             }
-            ImGui::SameLine();
             static int setTargetClicked = 0;
-            static char targetnum[48] = "";
-            if (ImGui::Button("Set Target"))
+            static char targetname[48] = "";
+            if (ImGui::Button("Set Target by Name"))
                 setTargetClicked++;
             if (setTargetClicked & 1)
             {
                 //SetTarget(atoi(targetnum), 0);
                 //SetTargetUI();
                 int tarOffset = 0;
-                tarOffset = findEntityByName(targetnum);
+                tarOffset = findEntityByName(targetname);
                 if (tarOffset > 0) {
                     SetTarget(tarOffset, 0);
                     SetTargetUI();
@@ -58,7 +57,19 @@ void DrawGui() {
                 setTargetClicked++;
             }
             ImGui::SameLine();
+            ImGui::InputText("##targetname", targetname, IM_ARRAYSIZE(targetname));
+            static int setTargetOffsetClicked = 0;
+            static char targetnum[10] = "";
+            if (ImGui::Button("Set Target by Offset"))
+                setTargetOffsetClicked++;
+            if (setTargetOffsetClicked & 1)
+            {
+                SetTarget(atoi(targetnum), 0);
+                SetTargetUI();
 
+                setTargetOffsetClicked++;
+            }
+            ImGui::SameLine();
             ImGui::InputText("##targetnum", targetnum, IM_ARRAYSIZE(targetnum));
             // Child 1: no border, enable horizontal scrollbar
             {

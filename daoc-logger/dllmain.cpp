@@ -170,9 +170,10 @@ DWORD WINAPI Init(HMODULE hModule)
     (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)origWndProc);
 
     if (ptrPresent != NULL && ptrReset != NULL) {
-        cleanupImgui();
         WriteMem((char*)ptrPresent, oPresBytes, 5);
         WriteMem((char*)ptrReset, oResetBytes, 5);
+        cleanupImgui();
+        bInit = false;
     }
 
     FreeLibraryAndExitThread(hModule, 0);
