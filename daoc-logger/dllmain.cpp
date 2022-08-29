@@ -167,6 +167,8 @@ DWORD WINAPI Init(HMODULE hModule)
         if (GetAsyncKeyState(VK_RCONTROL) & 1) {
             break;
         }
+        //Sleep to prevent crushing the CPU
+        Sleep(50);
     }
 
     //#ifdef _DEBUG
