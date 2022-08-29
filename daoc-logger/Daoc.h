@@ -89,7 +89,7 @@ struct buff_t {
 buff_t plyrBuffTable[75];
 
 //Location of Player buffs table
-//Address of signature = game.dll + 0x0001FB26
+//Address of signature = game.dll + 0x0001FB26  +0x1
 // buff_t[75]
 const char* plyrBuffTablePattern = "\xBF\x00\x00\x00\x00\xC7\x45\xF8";
 const char* plyrBuffTableMask = "x????xxx";
@@ -127,7 +127,7 @@ unsigned char* plyrSkillTablePtr;
 int pstCount;
 
 //UseSkill list start
-//Address of signature = game.dll + 0x0001EF56
+//Address of signature = game.dll + 0x0001EF56 +0x1
 const char* plyrUseSkillTablePattern = "\xBF\x00\x00\x00\x00\xF3\x00\x89\x1D";
 const char* plyrUseSkillTableMask = "x????x?xx";
 void* plyrUseSkillTableTemp;
@@ -147,11 +147,18 @@ void DumpSkills() {
 //Total length of entity list (0x19b8 * 2000): 0xC8ED80
 //Calling this function seems to crash due to race condition sometimes
 typedef uintptr_t(__fastcall* _GetEntityPointer)(int entityOffset);
-_GetEntityPointer GetEntityPointer = (_GetEntityPointer)0x43589f;
+_GetEntityPointer GetEntityPointer;// = (_GetEntityPointer)0x43589f;
+
+//Address of signature = game.dll + 0x0003589F
+const char* getEntityPtrPattern = "\x85\xC9\x7C\x00\x81\xF9\x00\x00\x00\x00\x7D\x00\x56\x8B\x35\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x5E";
+const char* getEntityPtrMask = "xxx?xx????x?xxx????x????x";
 
 //table_dex:eax  entity_idx:ecx, Destination:stack0x4, count:stack0x8
-uintptr_t wGetEntityName = 0x4358ee;
+uintptr_t wGetEntityName;// = 0x4358ee;
 
+//Address of signature = game.dll + 0x000358EE
+const char* getEntityNamePattern = "\x55\x8B\xEC\x51\x85\xC9\x57";
+const char* getEntityNameMask = "xxxxxxx";
 
 //credit atom0s for this function
 //use __stdcall to make stack setup/cleanup simpler
@@ -194,19 +201,30 @@ void __declspec(naked) __stdcall GetEntityName(int table_idx, int entity_idx, ch
 
 //Sanity checker before calling GetEntityPointer
 typedef bool(__fastcall* _EntityPtrSanityCheck)(int entityListOffset);
-_EntityPtrSanityCheck EntityPtrSanityCheck = (_EntityPtrSanityCheck)0x4358bf;
-int preCheck = *(int*)0xaa4c5c;
+_EntityPtrSanityCheck EntityPtrSanityCheck;// = (_EntityPtrSanityCheck)0x4358bf;
 int entityListOffset;
+
+//Address of signature = game.dll + 0x000358BF 
+const char* entityPtrCheckPattern = "\x85\xC9\x7C\x00\x81\xF9\x00\x00\x00\x00\x7D\x00\x56\x8B\x35\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x85\xC0";
+const char* entityPtrCheckMask = "xxx?xx????x?xxx????x????xx";
 
 //This is for npc / objects only
 //Calling this function seems to crash due to race conditions sometimes
 typedef int(__cdecl* _getNPCEntityOffsetFromOid)(int objectId);
-_getNPCEntityOffsetFromOid GetNPCEntityOffsetFromOid = (_getNPCEntityOffsetFromOid)0x411721;
+_getNPCEntityOffsetFromOid GetNPCEntityOffsetFromOid;// = (_getNPCEntityOffsetFromOid)0x411721;
+
+//Address of signature = game.dll + 0x00011721
+const char* getEntityOffsetFromOidPattern = "\x56\x33\xF6\x39\x35\x00\x00\x00\x00\x7E\x00\x8B\xCE\xE8\x00\x00\x00\x00\x84\xC0\x74\x00\x8B\xCE\xE8\x00\x00\x00\x00\x66\x8B";
+const char* getEntityOffsetFromOidMask = "xxxxx????x?xxx????xxx?xxx????xx";
 
 //This function is for players: 0x4116ba
 //Calling this function seems to crash due to race condition sometimes
 typedef int(__cdecl* _getPlyrEntityOffsetFromListIndex)(int sessionId);
 _getPlyrEntityOffsetFromListIndex GetPlyrEntityOffsetFromListIndex = (_getPlyrEntityOffsetFromListIndex)0x4116ba;
+
+//Address of signature = game.dll + 0x000116BA
+const char* getPlyrEntityOffsetFromPlyrListPattern = "\x57\xFF\x74\x00\x00\xE8\x00\x00\x00\x00\x8B\xF8";
+const char* getPlyrEntityOffsetFromPlyrListMask = "xxx??x????xx";
 
 //Entity global variables/lists
 int objectId;
@@ -223,9 +241,11 @@ int plyrEntityListOffset;
 int findEntOffset;
 int entbyoidCount;
 
-int entityListMax = *(int*)0xaa4c5c;
-
-
+int entityListMax;// = *(int*)0xaa4c5c;
+void* ptrEntityListMax;
+//Address of signature = game.dll + 0x00011724 +0x2
+const char* entityListMaxPattern = "\x39\x35\x00\x00\x00\x00\x7E\x00\x8B\xCE\xE8\x00\x00\x00\x00\x84\xC0\x74\x00\x8B\xCE\xE8\x00\x00\x00\x00\x66\x8B";
+const char* entityListMaxMask = "xx????x?xxx????xxx?xxx????xx";
 
 struct entName_t {
     char name[48];
@@ -397,12 +417,13 @@ BYTE autorunToggle;
 
 struct playerpos_t {
     float pos_x;
-    short heading;
+    int heading;
     unsigned char unknown[68];
     float pos_y;
     unsigned char unknown2[8];
     float pos_z;
-    char unknown4;
+    char unknown4[16];
+    int rotatePlayer;
 };
 
 DWORD playerPositionPtr;
@@ -521,7 +542,7 @@ void __declspec(naked) runSpeedHookFunc() {
 //Set target func
 
 typedef void(__cdecl* _SetTarget)(int entIdx, bool hasTarget);
-_SetTarget SetTarget;// = (_SellRequest)0x42b2e3;
+_SetTarget SetTarget;// = (_SetTarget)0x42b2e3;
 
 //This function updates the UI with current target set via SetTarget
 typedef void(__cdecl* _SetTargetUI)();

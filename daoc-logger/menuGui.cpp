@@ -30,6 +30,9 @@ void DrawGui() {
         //update current target value
         currentTargetEntOffset = *(int*)ptrCurrentTargetEntOffset;
 
+        //Update entitylist max
+        entityListMax = *(int*)ptrEntityListMax;
+
         if (ImGui::TreeNode("Entities")) {
             static int dumpClicked = 0;
             if (ImGui::Button("Dump Entities"))
@@ -297,6 +300,18 @@ void DrawGui() {
 }
 
 void LoadHooks() {
+
+    //get entity pointer function address
+    GetEntityPointer = (_GetEntityPointer)(ScanModIn((char*)getEntityPtrPattern, (char*)getEntityPtrMask, "game.dll"));
+    wGetEntityName = (uintptr_t)(ScanModIn((char*)getEntityNamePattern, (char*)getEntityNameMask, "game.dll"));
+    EntityPtrSanityCheck = (_EntityPtrSanityCheck)(ScanModIn((char*)entityPtrCheckPattern, (char*)entityPtrCheckMask, "game.dll"));
+    GetNPCEntityOffsetFromOid = (_getNPCEntityOffsetFromOid)(ScanModIn((char*)getEntityOffsetFromOidPattern, (char*)getEntityOffsetFromOidMask, "game.dll"));
+
+    //EntityList Max
+    void* tmpEntityListMax = (void*)(ScanModIn((char*)entityListMaxPattern, (char*)entityListMaxMask, "game.dll"));
+    DWORD locEntityListMax = (DWORD)((size_t)tmpEntityListMax + 0x2);
+    ptrEntityListMax = *(void**)locEntityListMax;
+
     //player buffs address
     plyrBuffTableTemp = (void*)(ScanModIn((char*)plyrBuffTablePattern, (char*)plyrBuffTableMask, "game.dll"));
     plyrBuffTableLoc = (DWORD)((size_t)plyrBuffTableTemp + 0x1);
