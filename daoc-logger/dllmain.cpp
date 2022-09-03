@@ -73,7 +73,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     return ::CallWindowProcA(oWndProc, hWnd, msg, wParam, lParam);
 }
-
+//HRESULT APIENTRY
 HRESULT APIENTRY hkPresent(LPDIRECT3DDEVICE9 pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion)
 {
 
@@ -86,7 +86,7 @@ HRESULT APIENTRY hkPresent(LPDIRECT3DDEVICE9 pDevice, const RECT* pSourceRect, c
 
     return oPresent(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
-
+//HRESULT APIENTRY
 HRESULT APIENTRY hkReset(LPDIRECT3DDEVICE9 pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
 
@@ -119,8 +119,11 @@ DWORD WINAPI Init(HMODULE hModule)
     //	std::cout << "DLL got injected!" << std::endl;
     //#endif 
 
+    //Daoc Addresses
+    LoadHooks();
 
 
+    //D3d9 hook
     void* ptrPresent = NULL;
     void* ptrReset = NULL;
     window = GetProcessWindow();
@@ -147,12 +150,36 @@ DWORD WINAPI Init(HMODULE hModule)
 
         //std::cout << "present: 0x" << std::hex << d3d9Device[17] << " reset: 0x" << d3d9Device[16] << std::endl;
         if (ptrPresent != NULL && ptrReset != NULL) {
+
+            //DetourRestoreAfterWith();
+            DetourTransactionBegin();
+            DetourUpdateThread(GetCurrentThread());
+            DetourAttach(&(PVOID&)ptrPresent, hkPresent);
+            long result = DetourTransactionCommit();
+            if (result != NO_ERROR)
+            {
+                
+            }
+            
+            DetourTransactionBegin();
+            DetourUpdateThread(GetCurrentThread());
+            DetourAttach(&(PVOID&)ptrReset, hkReset);
+            result = DetourTransactionCommit();
+            if (result != NO_ERROR)
+            {
+
+            }
+
+            oPresent = (tPresent)ptrPresent;
+            oReset = (tReset)ptrReset;
             //write original bytes to buffer for cleanup later
-            memcpy(oPresBytes, (char*)ptrPresent, 5);
-            memcpy(oResetBytes, (char*)ptrReset, 5);
-            //do the hooks
-            oPresent = (tPresent)TrampHook((char*)ptrPresent, (char*)hkPresent, 5);
-            oReset = (tReset)TrampHook((char*)ptrReset, (char*)hkReset, 5);
+            //memcpy(oPresBytes, (char*)ptrPresent, 5);
+            //memcpy(oResetBytes, (char*)ptrReset, 5);
+            ////do the hooks
+            //oPresent = (tPresent)TrampHook((char*)ptrPresent, (char*)hkPresent, 5);
+            //oReset = (tReset)TrampHook((char*)ptrReset, (char*)hkReset, 5);
+
+
         }
 
     }
@@ -160,8 +187,7 @@ DWORD WINAPI Init(HMODULE hModule)
     origWndProc = (WNDPROC)GetWindowLongPtr(window, GWL_WNDPROC);
     oWndProc = (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)WndProc);
 
-    //Daoc Addresses
-    LoadHooks();
+
 
     while (true) {
         if (GetAsyncKeyState(VK_RCONTROL) & 1) {
@@ -182,8 +208,26 @@ DWORD WINAPI Init(HMODULE hModule)
     (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)origWndProc);
 
     if (ptrPresent != NULL && ptrReset != NULL) {
-        WriteMem((char*)ptrPresent, oPresBytes, 5);
-        WriteMem((char*)ptrReset, oResetBytes, 5);
+        //WriteMem((char*)ptrPresent, oPresBytes, 5);
+        //WriteMem((char*)ptrReset, oResetBytes, 5);
+        DetourTransactionBegin();
+        DetourUpdateThread(GetCurrentThread());
+        DetourDetach(&(PVOID&)ptrPresent, hkPresent);
+        long result = DetourTransactionCommit();
+        if (result != NO_ERROR)
+        {
+
+        }
+
+        DetourTransactionBegin();
+        DetourUpdateThread(GetCurrentThread());
+        DetourDetach(&(PVOID&)ptrReset, hkReset);
+        result = DetourTransactionCommit();
+        if (result != NO_ERROR)
+        {
+
+        }
+
         cleanupImgui();
         bInit = false;
     }

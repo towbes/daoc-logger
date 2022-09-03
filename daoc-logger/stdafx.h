@@ -13,6 +13,9 @@
 #include "commctrl.h"
 #include <TlHelp32.h>
 
+//detours
+#include "detours.h"
+
 //d3d9
 #include <d3d9.h>
 #include <d3dx9.h>

@@ -666,30 +666,12 @@ std::set<int> badItemIdList{
 
 std::set<int> goodItemIdList{ };
 
-void p_filterItems() 
-{
-    //if it's an incoming item packet
-    if (recvBuffer[0] == '\x02' && recvLen > 10) {
-        int slotId = recvBuffer[7];
-        int itemId = recvBuffer[8] << 8 | recvBuffer[9];
-        //m_readSlot(slotId);
-        //printf("Incoming Item to slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
-        //print the chars
-        for (unsigned int i = 32; i < recvLen; i++) {
-            std::cout << recvBuffer[i];
-        }
-        printf("\n");
-        if (badItemIdList.find(itemId) != badItemIdList.end()) {
-        //if (goodItemIdList.find(itemId) == goodItemIdList.end() && m_readItemId(slotId) == itemId) {
-            printf("Dropping slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
-            MoveItem(1, slotId, 0);
-        }
-    }
-}
+
 
 //Read item slot information from memory
 void m_cleanInventory()
 {
+
     //look through all slots
     for (int slotNum = 40; slotNum < 80; slotNum++) {
         unsigned char* tmpPtr = reinterpret_cast<unsigned char*>(ptrInventory);
@@ -711,6 +693,35 @@ void m_cleanInventory()
 
     printf("Slot41loc - %p, ItemHex: %02x, ItemId - %u, ItemName - %s\n", ValLoc2, slot41.itemId, slot41.itemId, slot41.itemName);
     */
+}
+
+void p_filterItems()
+{
+    //Use random number to prevent spam for calling cleaninventory
+    int randomchance = 100;
+    int randomnum = rand();
+    
+    if (randomchance > randomnum) {
+        m_cleanInventory();
+    }
+
+    //if it's an incoming item packet
+    //if (recvBuffer[0] == '\x02' && recvLen > 10) {
+    //    int slotId = recvBuffer[7];
+    //    int itemId = recvBuffer[8] << 8 | recvBuffer[9];
+    //    //m_readSlot(slotId);
+    //    //printf("Incoming Item to slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
+    //    //print the chars
+    //    for (unsigned int i = 32; i < recvLen; i++) {
+    //        std::cout << recvBuffer[i];
+    //    }
+    //    printf("\n");
+    //    if (badItemIdList.find(itemId) != badItemIdList.end()) {
+    //        //if (goodItemIdList.find(itemId) == goodItemIdList.end() && m_readItemId(slotId) == itemId) {
+    //        printf("Dropping slot %u - ItemHex: %02x, ItemId: %u, Item Name - ", slotId, itemId, itemId);
+    //        MoveItem(1, slotId, 0);
+    //    }
+    //}
 }
 
 //Read item slot information from memory
@@ -739,3 +750,15 @@ void sell_inv() {
         }
     }
 }
+
+
+//Chat info / functions
+
+//Latest line in Main chat window
+//Address of signature = game.dll + 0x000191E4
+const char* lastChatMainPattern = "\xBE\x00\x00\x00\x00\x56\x8D\x47\x00\xE8";
+const char* lastChatMainMask = "x????xxx?x";
+//Not sure buffer size but 512 to be safe
+char lastChatBuf[256];
+const char* ptrLastChatMain;
+//"BE ? ? ? ? 56 8D 47 ? E8"

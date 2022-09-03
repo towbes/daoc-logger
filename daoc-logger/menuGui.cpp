@@ -5,6 +5,7 @@
 #include "Scan.h"
 
 bool g_ShowDemo = false;
+bool useItemFilter = false;
 
 void DrawGui() {
     ImGui_ImplDX9_NewFrame();
@@ -277,6 +278,24 @@ void DrawGui() {
                 sell_inv();
                 sellInvClicked++;
             }
+            static int itemFilterClicked = 0;
+            
+            if (!useItemFilter) {
+                if (ImGui::Button("Toggle Item Filter On"))
+                    itemFilterClicked++;
+            }
+            else {
+                if (ImGui::Button("Toggle Item Filter Off"))
+                    itemFilterClicked++;
+            }
+            if (itemFilterClicked & 1)
+            {
+                useItemFilter = !useItemFilter;
+                itemFilterClicked++;
+            }
+            if (useItemFilter) {
+                p_filterItems();
+            } 
             //look through all slots
             for (int slotNum = 40; slotNum < 80; slotNum++) {
                 size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
@@ -287,6 +306,12 @@ void DrawGui() {
             }
             ImGui::TreePop();
         }
+
+        //if (ImGui::TreeNode("Chat"))
+        //{
+        //    memcpy(lastChatBuf
+        //    ImGui::TreePop();
+        //}
 
 
 
@@ -369,4 +394,9 @@ void LoadHooks() {
     //target function
     SetTarget = (_SetTarget)(ScanModIn((char*)funcSetTargetPattern, (char*)funcSettargetMask, "game.dll"));
     SetTargetUI = (_SetTargetUI)(ScanModIn((char*)funcSetTargetUIPattern, (char*)funcSetTargetUIMask, "game.dll"));
+
+    //chat
+    void* ptrLastChatMsg = (void*)(ScanModIn((char*)lastChatMainPattern, (char*)lastChatMainMask, "game.dll"));
+    DWORD locLastChatMsg = (DWORD)((size_t)ptrLastChatMsg + 0x1);
+    ptrLastChatMain = (const char*)locLastChatMsg;
 }

@@ -25,6 +25,9 @@
     <Filter Include="stdafx">
       <UniqueIdentifier>{5da0e321-550c-46b7-b1fe-aa10d9052141}</UniqueIdentifier>
     </Filter>
+    <Filter Include="detours">
+      <UniqueIdentifier>{0e557fb8-1b62-4d1a-a921-35644acc31e0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -122,5 +125,16 @@
     <ClInclude Include="targetver.h">
       <Filter>stdafx</Filter>
     </ClInclude>
+    <ClInclude Include="detours\include\detours\detours.h">
+      <Filter>detours</Filter>
+    </ClInclude>
+    <ClInclude Include="detours\include\detours\detver.h">
+      <Filter>detours</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="detours\lib\detours.lib">
+      <Filter>detours</Filter>
+    </Library>
   </ItemGroup>
 </Project>
