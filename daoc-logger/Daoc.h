@@ -154,7 +154,7 @@ const char* getEntityPtrPattern = "\x85\xC9\x7C\x00\x81\xF9\x00\x00\x00\x00\x7D\
 const char* getEntityPtrMask = "xxx?xx????x?xxx????x????x";
 
 //table_dex:eax  entity_idx:ecx, Destination:stack0x4, count:stack0x8
-uintptr_t wGetEntityName;// = 0x4358ee;
+uintptr_t oGetEntityName;// = 0x4358ee;
 
 //Address of signature = game.dll + 0x000358EE
 const char* getEntityNamePattern = "\x55\x8B\xEC\x51\x85\xC9\x57";
@@ -181,7 +181,7 @@ void __declspec(naked) __stdcall GetEntityName(int table_idx, int entity_idx, ch
         pop eax
 
         //call the game function
-        call wGetEntityName
+        call GetEntityName
 
         //pop the two values off stack
         pop eax
@@ -198,6 +198,16 @@ void __declspec(naked) __stdcall GetEntityName(int table_idx, int entity_idx, ch
 
     }
 }
+
+//chat input command handler
+
+uintptr_t oCmdHandler = 0x416444;
+//Address of signature = game.dll + 0x00016444
+const char* cmdHandlerPattern = "\x55\x8B\xEC\x81\xEC\x00\x00\x00\x00\x85\xD2";
+const char* cmdHandlerMask = "xxxxx????xx";
+//"55 8B EC 81 EC ? ? ? ? 85 D2"
+
+
 
 //Sanity checker before calling GetEntityPointer
 typedef bool(__fastcall* _EntityPtrSanityCheck)(int entityListOffset);

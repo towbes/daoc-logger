@@ -5,7 +5,7 @@
 #include "Scan.h"
 
 bool g_ShowDemo = false;
-bool useItemFilter = false;
+bool useItemFilter = true;
 
 void DrawGui() {
     ImGui_ImplDX9_NewFrame();
@@ -278,24 +278,7 @@ void DrawGui() {
                 sell_inv();
                 sellInvClicked++;
             }
-            static int itemFilterClicked = 0;
-            
-            if (!useItemFilter) {
-                if (ImGui::Button("Toggle Item Filter On"))
-                    itemFilterClicked++;
-            }
-            else {
-                if (ImGui::Button("Toggle Item Filter Off"))
-                    itemFilterClicked++;
-            }
-            if (itemFilterClicked & 1)
-            {
-                useItemFilter = !useItemFilter;
-                itemFilterClicked++;
-            }
-            if (useItemFilter) {
-                p_filterItems();
-            } 
+
             //look through all slots
             for (int slotNum = 40; slotNum < 80; slotNum++) {
                 size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
@@ -313,7 +296,24 @@ void DrawGui() {
         //    ImGui::TreePop();
         //}
 
+        static int itemFilterClicked = 0;
 
+        if (!useItemFilter) {
+            if (ImGui::Button("Toggle Item Filter On"))
+                itemFilterClicked++;
+        }
+        else {
+            if (ImGui::Button("Toggle Item Filter Off"))
+                itemFilterClicked++;
+        }
+        if (itemFilterClicked & 1)
+        {
+            useItemFilter = !useItemFilter;
+            itemFilterClicked++;
+        }
+        if (useItemFilter) {
+            p_filterItems();
+        }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
@@ -324,11 +324,49 @@ void DrawGui() {
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 }
 
+char* command = NULL;
+
+void printCmd(char* command, int cmdType) {
+    ::OutputDebugStringA(std::format("Type {}, Command: {}", cmdType, command).c_str());
+}
+
+
+
+//wrapper for the cmd handler hook
+void __declspec(naked) __stdcall wrapCmdHandler(int cmdType) {
+    __asm {
+        //save the registers/flags
+        pushad
+        pushfd
+        mov command, edx
+    }
+
+    printCmd(command, cmdType);
+
+    __asm {
+        //Setup the call to game function cmd handler
+        //String is put into edx, type is pushed onto stack
+        mov edx, command
+        push cmdType
+
+        //call the game function
+        call oCmdHandler
+
+        //pop the type off the stack
+        pop eax
+
+        //restore registers/flags
+        popfd
+        popad
+        ret 
+    }
+}
+
 void LoadHooks() {
 
     //get entity pointer function address
     GetEntityPointer = (_GetEntityPointer)(ScanModIn((char*)getEntityPtrPattern, (char*)getEntityPtrMask, "game.dll"));
-    wGetEntityName = (uintptr_t)(ScanModIn((char*)getEntityNamePattern, (char*)getEntityNameMask, "game.dll"));
+    oGetEntityName = (uintptr_t)(ScanModIn((char*)getEntityNamePattern, (char*)getEntityNameMask, "game.dll"));
     EntityPtrSanityCheck = (_EntityPtrSanityCheck)(ScanModIn((char*)entityPtrCheckPattern, (char*)entityPtrCheckMask, "game.dll"));
     GetNPCEntityOffsetFromOid = (_getNPCEntityOffsetFromOid)(ScanModIn((char*)getEntityOffsetFromOidPattern, (char*)getEntityOffsetFromOidMask, "game.dll"));
 
@@ -399,4 +437,14 @@ void LoadHooks() {
     void* ptrLastChatMsg = (void*)(ScanModIn((char*)lastChatMainPattern, (char*)lastChatMainMask, "game.dll"));
     DWORD locLastChatMsg = (DWORD)((size_t)ptrLastChatMsg + 0x1);
     ptrLastChatMain = (const char*)locLastChatMsg;
+
+    //Cmd handler hook
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourAttach(&(PVOID&)oCmdHandler, wrapCmdHandler);
+    long result = DetourTransactionCommit();
+    if (result != NO_ERROR)
+    {
+
+    }
 }
