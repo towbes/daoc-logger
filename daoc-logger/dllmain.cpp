@@ -111,14 +111,6 @@ DWORD WINAPI Init(HMODULE hModule)
         return 0;
     }
 
-    //#ifdef _DEBUG
-    //	//Create Console
-    //	AllocConsole();
-    //	FILE* f;
-    //	freopen_s(&f, "CONOUT$", "w", stdout);
-    //	std::cout << "DLL got injected!" << std::endl;
-    //#endif 
-
     //Daoc Addresses
     LoadHooks();
 
@@ -148,7 +140,6 @@ DWORD WINAPI Init(HMODULE hModule)
             ptrReset = *(void**)ptrResetTemp;
         }
 
-        //std::cout << "present: 0x" << std::hex << d3d9Device[17] << " reset: 0x" << d3d9Device[16] << std::endl;
         if (ptrPresent != NULL && ptrReset != NULL) {
 
             //DetourRestoreAfterWith();
@@ -172,14 +163,6 @@ DWORD WINAPI Init(HMODULE hModule)
 
             oPresent = (tPresent)ptrPresent;
             oReset = (tReset)ptrReset;
-            //write original bytes to buffer for cleanup later
-            //memcpy(oPresBytes, (char*)ptrPresent, 5);
-            //memcpy(oResetBytes, (char*)ptrReset, 5);
-            ////do the hooks
-            //oPresent = (tPresent)TrampHook((char*)ptrPresent, (char*)hkPresent, 5);
-            //oReset = (tReset)TrampHook((char*)ptrReset, (char*)hkReset, 5);
-
-
         }
 
     }
@@ -196,21 +179,12 @@ DWORD WINAPI Init(HMODULE hModule)
         //Sleep to prevent crushing the CPU
         Sleep(50);
     }
-
-    //#ifdef _DEBUG
-    //	if (f != 0) {
-    //		fclose(f);
-    //	}
-    //	FreeConsole();
-    //#endif 
     
     //Restore WndProc
     (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)origWndProc);
 
 
     if (ptrPresent != NULL && ptrReset != NULL) {
-        //WriteMem((char*)ptrPresent, oPresBytes, 5);
-        //WriteMem((char*)ptrReset, oResetBytes, 5);
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
         DetourDetach(&(PVOID&)ptrPresent, hkPresent);
