@@ -207,6 +207,7 @@ DWORD WINAPI Init(HMODULE hModule)
     //Restore WndProc
     (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)origWndProc);
 
+
     if (ptrPresent != NULL && ptrReset != NULL) {
         //WriteMem((char*)ptrPresent, oPresBytes, 5);
         //WriteMem((char*)ptrReset, oResetBytes, 5);
@@ -231,6 +232,9 @@ DWORD WINAPI Init(HMODULE hModule)
         cleanupImgui();
         bInit = false;
     }
+
+    //Daoc Addresses
+    UnloadHooks();
 
     FreeLibraryAndExitThread(hModule, 0);
 

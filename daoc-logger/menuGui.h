@@ -4,3 +4,5 @@
 void DrawGui();
 
 void LoadHooks();
+
+void UnloadHooks();

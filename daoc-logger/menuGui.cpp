@@ -5,6 +5,7 @@
 #include "Scan.h"
 
 bool g_ShowDemo = false;
+bool g_showMenu = true;
 bool useItemFilter = true;
 
 void DrawGui() {
@@ -18,7 +19,7 @@ void DrawGui() {
         bool bShow = true;
         ImGui::ShowDemoWindow(&bShow);
     }
-    else {
+    else if (g_showMenu) {
         static float f = 0.0f;
         static int counter = 0;
         ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Once);
@@ -324,42 +325,108 @@ void DrawGui() {
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 }
 
-char* command = NULL;
+bool blockCommand = false;
+DWORD cmdType = 0;
 
-void printCmd(char* command, int cmdType) {
-    ::OutputDebugStringA(std::format("Type {}, Command: {}", cmdType, command).c_str());
+//True will block the command, false will pass it through
+bool ProcessCmd(const char* command, int* cmdType) {
+    ::OutputDebugStringA(std::format("Type {}, Command: {}", *cmdType, command).c_str());
+    if (strcmp(command, "/menu") == 0) {
+        g_showMenu = !g_showMenu;
+        return true;
+    }
+    return false;
 }
 
-
-
 //wrapper for the cmd handler hook
-void __declspec(naked) __stdcall wrapCmdHandler(int cmdType) {
-    __asm {
-        //save the registers/flags
-        pushad
-        pushfd
-        mov command, edx
+//ty again atom0s for help in setting this up
+__declspec(naked) void __stdcall wrapCmdHandler() {
+    //static char mCmd[512];
+    const char* oCmd;
+    int32_t oCmdType;
+
+    //save the registers/flags;
+    _asm pushad;
+    _asm pushfd;
+    //prologue;
+    _asm push ebp;
+    _asm mov ebp, esp;
+    _asm sub esp, __LOCAL_SIZE;
+
+    //getthe cmd type
+    _asm push[ebp + 0x2C];
+    _asm pop oCmdType;
+    //get the command buffer address
+    _asm mov oCmd, edx;
+
+    if (!ProcessCmd(oCmd, &oCmdType)) {
+        _asm {
+            //Setup the call to game function cmd handler
+            //String is put into edx, type is pushed onto stack
+            //mov edx, oCmd
+            //push cmdType
+
+            //epilogue
+            mov esp, ebp
+            pop ebp
+            //restore registers/flags
+            popfd
+            popad
+
+            //instructions overwritten by hook
+            push ebp
+            mov ebp, esp
+            sub esp, 0x408
+
+            //jump to the game function
+            jmp newCmdHandler
+        }
+    }
+    else {
+        _asm {
+            //epilogue
+            mov esp, ebp
+            pop ebp
+            //restore register/flags
+            popfd
+            popad
+            ret
+        }
+
     }
 
-    printCmd(command, cmdType);
+}
 
-    __asm {
-        //Setup the call to game function cmd handler
-        //String is put into edx, type is pushed onto stack
-        mov edx, command
-        push cmdType
+void grabChat(const char* buffer) {
+    std::string strBuff = std::string(buffer);
+    ::OutputDebugStringA(std::format("Text: {}", strBuff).c_str());
+}
 
-        //call the game function
-        call oCmdHandler
+__declspec(naked) void __stdcall printChat() {
+    const char* ptrBuff;
+    //save the registers/flags;
+    _asm pushad;
+    _asm pushfd;
+    //prologue;
+    _asm push ebp;
+    _asm mov ebp, esp;
+    _asm sub esp, __LOCAL_SIZE;
 
-        //pop the type off the stack
-        pop eax
+    _asm mov ptrBuff, ebx;
 
-        //restore registers/flags
-        popfd
-        popad
-        ret 
-    }
+    ptrBuff += 1;
+    grabChat(ptrBuff);
+
+    //epilogue
+    _asm mov esp, ebp;
+    _asm pop ebp;
+    //restore registers/flags
+    _asm popfd;
+    _asm popad;
+
+    //instruction we overwrote
+    _asm mov eax, 0x7953B8
+    _asm jmp newPrintChat
 }
 
 void LoadHooks() {
@@ -443,6 +510,39 @@ void LoadHooks() {
     DetourUpdateThread(GetCurrentThread());
     DetourAttach(&(PVOID&)oCmdHandler, wrapCmdHandler);
     long result = DetourTransactionCommit();
+    if (result != NO_ERROR)
+    {
+
+    }
+
+    //Cmd handler hook
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourAttach(&(PVOID&)oPrintChat, printChat);
+    result = DetourTransactionCommit();
+    if (result != NO_ERROR)
+    {
+
+    }
+    
+}
+
+void UnloadHooks() {
+    //Cmd handler hook
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourDetach(&(PVOID&)oCmdHandler, wrapCmdHandler);
+    long result = DetourTransactionCommit();
+    if (result != NO_ERROR)
+    {
+
+    }
+
+    //Cmd handler hook
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourDetach(&(PVOID&)oPrintChat, printChat);
+    result = DetourTransactionCommit();
     if (result != NO_ERROR)
     {
 
