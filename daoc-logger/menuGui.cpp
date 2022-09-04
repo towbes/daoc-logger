@@ -359,12 +359,25 @@ __declspec(naked) void __stdcall wrapCmdHandler() {
     //get the command buffer address
     _asm mov oCmd, edx;
 
+    // Prepare the modifiable command buffer..
+    //_asm pushad;
+    //_asm pushfd;
+    //::strcpy_s(p_cmd, c_cmd);
+    //_asm popfd;
+    //_asm popad;
+
     if (!ProcessCmd(oCmd, &oCmdType)) {
         _asm {
             //Setup the call to game function cmd handler
             //String is put into edx, type is pushed onto stack
             //mov edx, oCmd
             //push cmdType
+            // Update the modified command mode..
+            //_asm push eax;
+            //_asm mov eax, p_mode;
+            //_asm mov[ebp + 0x2C], eax;
+            //_asm pop eax;
+
 
             //epilogue
             mov esp, ebp
@@ -373,13 +386,11 @@ __declspec(naked) void __stdcall wrapCmdHandler() {
             popfd
             popad
 
-            //instructions overwritten by hook
-            push ebp
-            mov ebp, esp
-            sub esp, 0x408
+            // Update the modified command..
+            //_asm lea edx, [p_cmd];
 
             //jump to the game function
-            jmp newCmdHandler
+            jmp oCmdHandler
         }
     }
     else {
@@ -425,8 +436,7 @@ __declspec(naked) void __stdcall printChat() {
     _asm popad;
 
     //instruction we overwrote
-    _asm mov eax, 0x7953B8
-    _asm jmp newPrintChat
+    _asm jmp oPrintChat
 }
 
 void LoadHooks() {
@@ -504,6 +514,11 @@ void LoadHooks() {
     void* ptrLastChatMsg = (void*)(ScanModIn((char*)lastChatMainPattern, (char*)lastChatMainMask, "game.dll"));
     DWORD locLastChatMsg = (DWORD)((size_t)ptrLastChatMsg + 0x1);
     ptrLastChatMain = (const char*)locLastChatMsg;
+
+
+    oCmdHandler = (void*)(ScanModIn((char*)cmdHandlerPattern, (char*)cmdHandlerMask, "game.dll"));
+
+    oPrintChat = (void*)(ScanModIn((char*)printChatPattern, (char*)printChatMask, "game.dll"));
 
     //Cmd handler hook
     DetourTransactionBegin();
