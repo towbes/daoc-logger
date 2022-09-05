@@ -210,7 +210,6 @@ const char* cmdHandlerMask = "xxxxx????xx";
 
 //Print to chatlog
 void* oPrintChat;// = 0x4190e3;
-uintptr_t newPrintChat = 0x4190e8;
 
 //Address of signature = game.dll + 0x000190E3
 const char* printChatPattern = "\xB8\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x81\xEC\x00\x00\x00\x00\x83\x3D\x94\xA7\x04\x01";
@@ -447,6 +446,17 @@ struct playerpos_t {
 
 DWORD playerPositionPtr;
 playerpos_t* playerPosition = NULL;
+
+//pet window packet function
+//aggroState // 1-Aggressive, 2-Deffensive, 3-Passive
+//walkState // 1-Follow, 2-Stay, 3-GoTarg, 4-Here
+//command // 1-Attack, 2-Release
+typedef void(__cdecl* _PetWindow)(char aggroState, char walkState, char command);
+_PetWindow PetWindow;
+//Address of signature = game.dll + 0x0002AD78
+const char* funcPetWindowPattern = "\x55\x8B\xEC\x51\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x8A\x45\x00\x88\x45\x00\x8A\x45\x00\x88\x45\x00\x8A\x45";
+const char* funcPetWindowMask = "xxxxxxxxxx?x?xx?xx?xx?xx?xx";
+//"55 8B EC 51 83 3D 00 82 99 00 ? 75 ? 8A 45 ? 88 45 ? 8A 45 ? 88 45 ? 8A 45"
 
 
 //Packet item filter

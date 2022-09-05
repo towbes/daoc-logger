@@ -81,7 +81,10 @@ HRESULT APIENTRY hkPresent(LPDIRECT3DDEVICE9 pDevice, const RECT* pSourceRect, c
     if (!bInit) InitImGui(pDevice);
     else {
 
+        //Menu
         DrawGui();
+
+        GameLoops();
     }
 
     return oPresent(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);

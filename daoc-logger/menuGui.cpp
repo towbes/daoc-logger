@@ -5,7 +5,7 @@
 #include "Scan.h"
 
 bool g_ShowDemo = false;
-bool g_showMenu = true;
+bool g_showMenu = false;
 bool useItemFilter = true;
 
 void DrawGui() {
@@ -220,6 +220,32 @@ void DrawGui() {
             ImGui::TreePop();
         }
 
+        if (ImGui::TreeNode("Pet"))
+        {
+            static int petwindowClicked = 0;
+            static char aggroState[2] = "";
+            static char walkState[2] = "";
+            static char command[2] = "";
+            if (ImGui::Button("PetWindow Cmd"))
+                petwindowClicked++;
+            if (petwindowClicked & 1)
+            {
+
+                PetWindow((unsigned char)atoi(aggroState), (unsigned char)atoi(walkState), (unsigned char)atoi(command));
+                petwindowClicked++;
+            }
+            ImGui::Text("Aggro state: ");
+            ImGui::SameLine();
+            ImGui::InputText("##aggronum", aggroState, IM_ARRAYSIZE(aggroState));
+            ImGui::Text("Walk state: ");
+            ImGui::SameLine();
+            ImGui::InputText("##walkState", walkState, IM_ARRAYSIZE(walkState));
+            ImGui::Text("command: ");
+            ImGui::SameLine();
+            ImGui::InputText("##command", command, IM_ARRAYSIZE(command));
+            ImGui::TreePop();
+        }
+
         if (ImGui::TreeNode("PartyInfo"))
         {
             if (ptrPartyMemberInfo_x != NULL) {
@@ -312,9 +338,7 @@ void DrawGui() {
             useItemFilter = !useItemFilter;
             itemFilterClicked++;
         }
-        if (useItemFilter) {
-            p_filterItems();
-        }
+
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
@@ -323,6 +347,12 @@ void DrawGui() {
     ImGui::EndFrame();
     ImGui::Render();
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+}
+
+void GameLoops() {
+    if (useItemFilter) {
+        p_filterItems();
+    }
 }
 
 bool blockCommand = false;
@@ -514,6 +544,9 @@ void LoadHooks() {
     void* ptrLastChatMsg = (void*)(ScanModIn((char*)lastChatMainPattern, (char*)lastChatMainMask, "game.dll"));
     DWORD locLastChatMsg = (DWORD)((size_t)ptrLastChatMsg + 0x1);
     ptrLastChatMain = (const char*)locLastChatMsg;
+
+    //Pet window
+    PetWindow = (_PetWindow)(ScanModIn((char*)funcPetWindowPattern, (char*)funcPetWindowMask, "game.dll"));
 
 
     oCmdHandler = (void*)(ScanModIn((char*)cmdHandlerPattern, (char*)cmdHandlerMask, "game.dll"));
