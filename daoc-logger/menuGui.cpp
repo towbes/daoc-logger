@@ -195,7 +195,7 @@ void DrawGui() {
             if (useSpellClicked & 1)
             {
 
-                UseSpell(1, atoi(spellnum));
+                UseSpell(atoi(spellnum), 1);
                 useSpellClicked++;
             }
             ImGui::SameLine();

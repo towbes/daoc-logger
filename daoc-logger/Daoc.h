@@ -46,7 +46,7 @@ struct useSpell_t {
     char unknown[60];
 };
 
-typedef void(__cdecl* _UseSpell)(int canCastSpell, int spellSlot);
+typedef void(__cdecl* _UseSpell)(int spellSlot, int canCastSpell);
 _UseSpell UseSpell;
 
 //Address of signature = game.dll + 0x0002B4B8
