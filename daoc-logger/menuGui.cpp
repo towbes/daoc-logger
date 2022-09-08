@@ -4,9 +4,7 @@
 #include "Daoc.h"
 #include "Scan.h"
 
-bool g_ShowDemo = false;
-bool g_showMenu = false;
-bool useItemFilter = true;
+
 
 void DrawGui() {
     ImGui_ImplDX9_NewFrame();
@@ -320,7 +318,11 @@ void DrawGui() {
         if (ImGui::TreeNode("SendCommand"))
         {
             static int sendCmdClicked = 0;
+            static char cmdMode[5] = "";
+            static char iMode[5] = "";
             static char cmdBuffer[512] = "";
+            ImGui::InputText("##cmdMode", cmdMode, IM_ARRAYSIZE(cmdMode));
+            ImGui::InputText("##iMode", iMode, IM_ARRAYSIZE(iMode));
             ImGui::InputText("##cmdBuffer", cmdBuffer, IM_ARRAYSIZE(cmdBuffer));
             ImGui::SameLine();
             if (ImGui::Button("Send Command"))
@@ -329,7 +331,7 @@ void DrawGui() {
             if (sendCmdClicked & 1)
             {
 
-                SendCommand(cmdBuffer);
+                SendCommand(atoi(cmdMode), atoi(iMode), cmdBuffer);
                 sendCmdClicked++;
             }
             ImGui::TreePop();
@@ -373,116 +375,7 @@ void GameLoops() {
     }
 }
 
-//True will block the command, false will pass it through
-bool ProcessCmd(const char* command, int* cmdType) {
-    ::OutputDebugStringA(std::format("Type {}, Command: {}", *cmdType, command).c_str());
-    if (strcmp(command, "/menu") == 0) {
-        g_showMenu = !g_showMenu;
-        return true;
-    }
-    return false;
-}
 
-//wrapper for the cmd handler hook
-//ty again atom0s for help in setting this up
-__declspec(naked) void __stdcall wrapCmdHandler() {
-    //static char mCmd[512];
-    const char* oCmd;
-    int32_t oCmdType;
-
-    //save the registers/flags;
-    _asm pushad;
-    _asm pushfd;
-    //prologue;
-    _asm push ebp;
-    _asm mov ebp, esp;
-    _asm sub esp, __LOCAL_SIZE;
-
-    //getthe cmd type
-    _asm push[ebp + 0x2C];
-    _asm pop oCmdType;
-    //get the command buffer address
-    _asm mov oCmd, edx;
-
-    // Prepare the modifiable command buffer..
-    //_asm pushad;
-    //_asm pushfd;
-    //::strcpy_s(p_cmd, c_cmd);
-    //_asm popfd;
-    //_asm popad;
-
-    if (!ProcessCmd(oCmd, &oCmdType)) {
-        _asm {
-            //Setup the call to game function cmd handler
-            //String is put into edx, type is pushed onto stack
-            //mov edx, oCmd
-            //push cmdType
-            // Update the modified command mode..
-            //_asm push eax;
-            //_asm mov eax, p_mode;
-            //_asm mov[ebp + 0x2C], eax;
-            //_asm pop eax;
-
-
-            //epilogue
-            mov esp, ebp
-            pop ebp
-            //restore registers/flags
-            popfd
-            popad
-
-            // Update the modified command..
-            //_asm lea edx, [p_cmd];
-
-            //jump to the game function
-            jmp oCmdHandler
-        }
-    }
-    else {
-        _asm {
-            //epilogue
-            mov esp, ebp
-            pop ebp
-            //restore register/flags
-            popfd
-            popad
-            ret
-        }
-
-    }
-
-}
-
-void grabChat(const char* buffer) {
-    std::string strBuff = std::string(buffer);
-    ::OutputDebugStringA(std::format("Text: {}", strBuff).c_str());
-}
-
-__declspec(naked) void __stdcall printChat() {
-    const char* ptrBuff;
-    //save the registers/flags;
-    _asm pushad;
-    _asm pushfd;
-    //prologue;
-    _asm push ebp;
-    _asm mov ebp, esp;
-    _asm sub esp, __LOCAL_SIZE;
-
-    _asm mov ptrBuff, ebx;
-
-    ptrBuff += 1;
-    grabChat(ptrBuff);
-
-    //epilogue
-    _asm mov esp, ebp;
-    _asm pop ebp;
-    //restore registers/flags
-    _asm popfd;
-    _asm popad;
-
-    //instruction we overwrote
-    _asm jmp oPrintChat
-}
 
 void LoadHooks() {
 
@@ -568,7 +461,7 @@ void LoadHooks() {
 
     oPrintChat = (void*)(ScanModIn((char*)printChatPattern, (char*)printChatMask, "game.dll"));
 
-    SendCommand = (_SendCommand)(ScanModIn((char*)sendCmdPattern, (char*)sendCmdMask, "game.dll"));
+    ptrChatiMode = 0x10498D8;
 
     //Cmd handler hook
     DetourTransactionBegin();

@@ -4,6 +4,10 @@
 #include <map>
 
 
+bool g_ShowDemo = false;
+bool g_showMenu = false;
+bool useItemFilter = false;
+
 wchar_t moduleName[] = L"game.dll";
 
 //server name @ 0xc4a6a8
@@ -217,11 +221,8 @@ const char* printChatMask = "x????x????xx????xxxxxx";
 //"B8 ? ? ? ? E8 ? ? ? ? 81 EC ? ? ? ? 83 3D 94 A7 04 01"
 
 
-
-//Send command function
-//Commands prefixed with & (not /)
-typedef void(__cdecl* _SendCommand)(const char* cmdBuffer);
-_SendCommand SendCommand;// = (_GetEntityPointer)0x43589f;
+uintptr_t ptrChatiMode;
+// = (_GetEntityPointer)0x43589f;
 //Address of signature = game.dll + 0x0002BC08 0x42bc08
 const char* sendCmdPattern = "\x83\x3D\x00\x82\x99\x00\x00\x0F\x85\x00\x00\x00\x00\x56";
 const char* sendCmdMask = "xxxxxx?xx????x";
@@ -254,6 +255,141 @@ _getPlyrEntityOffsetFromListIndex GetPlyrEntityOffsetFromListIndex = (_getPlyrEn
 //Address of signature = game.dll + 0x000116BA
 const char* getPlyrEntityOffsetFromPlyrListPattern = "\x57\xFF\x74\x00\x00\xE8\x00\x00\x00\x00\x8B\xF8";
 const char* getPlyrEntityOffsetFromPlyrListMask = "xxx??x????xx";
+
+//True will block the command, false will pass it through
+bool ProcessCmd(const char* command, int* cmdType) {
+    ::OutputDebugStringA(std::format("Type {}, Command: {}", *cmdType, command).c_str());
+    if (strcmp(command, "/menu") == 0) {
+        g_showMenu = !g_showMenu;
+        return true;
+    }
+    return false;
+}
+
+//wrapper for the cmd handler hook
+//ty again atom0s for help in setting this up
+__declspec(naked) void __stdcall wrapCmdHandler() {
+    //static char mCmd[512];
+    const char* oCmd;
+    int32_t oCmdType;
+
+    //save the registers/flags;
+    _asm pushad;
+    _asm pushfd;
+    //prologue;
+    _asm push ebp;
+    _asm mov ebp, esp;
+    _asm sub esp, __LOCAL_SIZE;
+
+    //getthe cmd type
+    _asm push[ebp + 0x2C];
+    _asm pop oCmdType;
+    //get the command buffer address
+    _asm mov oCmd, edx;
+
+    // Prepare the modifiable command buffer..
+    //_asm pushad;
+    //_asm pushfd;
+    //::strcpy_s(p_cmd, c_cmd);
+    //_asm popfd;
+    //_asm popad;
+
+    if (!ProcessCmd(oCmd, &oCmdType)) {
+        _asm {
+            //Setup the call to game function cmd handler
+            //String is put into edx, type is pushed onto stack
+            //mov edx, oCmd
+            //push cmdType
+            // Update the modified command mode..
+            //_asm push eax;
+            //_asm mov eax, p_mode;
+            //_asm mov[ebp + 0x2C], eax;
+            //_asm pop eax;
+
+
+            //epilogue
+            mov esp, ebp
+            pop ebp
+            //restore registers/flags
+            popfd
+            popad
+
+            // Update the modified command..
+            //_asm lea edx, [p_cmd];
+
+            //jump to the game function
+            jmp oCmdHandler
+        }
+    }
+    else {
+        _asm {
+            //epilogue
+            mov esp, ebp
+            pop ebp
+            //restore register/flags
+            popfd
+            popad
+            ret
+        }
+
+    }
+
+}
+
+void grabChat(const char* buffer) {
+    std::string strBuff = std::string(buffer);
+    ::OutputDebugStringA(std::format("Text: {}", strBuff).c_str());
+}
+
+__declspec(naked) void __stdcall printChat() {
+    const char* ptrBuff;
+    //save the registers/flags;
+    _asm pushad;
+    _asm pushfd;
+    //prologue;
+    _asm push ebp;
+    _asm mov ebp, esp;
+    _asm sub esp, __LOCAL_SIZE;
+
+    _asm mov ptrBuff, ebx;
+
+    ptrBuff += 1;
+    grabChat(ptrBuff);
+
+    //epilogue
+    _asm mov esp, ebp;
+    _asm pop ebp;
+    //restore registers/flags
+    _asm popfd;
+    _asm popad;
+
+    //instruction we overwrote
+    _asm jmp oPrintChat
+}
+
+//Send command function
+//Commands prefixed with & (not /)
+void __declspec(naked) SendCommand(int cmdMode, int iMode, const char* cmdBuffer) {
+//void SendCommand(int cmdMode, int iMode, const char* cmdBuffer) {
+    //prepare stackframe
+    _asm push ebp;
+    _asm mov ebp, esp;
+    _asm sub esp, __LOCAL_SIZE;
+
+    *(int*)ptrChatiMode = iMode;
+    _asm push cmdMode;
+    _asm mov edx, cmdBuffer
+
+    _asm call wrapCmdHandler;
+    //wrapCmdHandler();
+
+    //epilogue
+    _asm mov esp, ebp;
+    _asm pop ebp;
+    //
+    _asm ret;
+
+}
 
 //Entity global variables/lists
 int objectId;
