@@ -160,7 +160,7 @@ uintptr_t oGetEntityName;// = 0x4358ee;
 const char* getEntityNamePattern = "\x55\x8B\xEC\x51\x85\xC9\x57";
 const char* getEntityNameMask = "xxxxxxx";
 
-//credit atom0s for this function
+// (c) 2022 atom0s [atom0s@live.com]
 //use __stdcall to make stack setup/cleanup simpler
 void __declspec(naked) __stdcall GetEntityName(int table_idx, int entity_idx, char* Destination, size_t Count) {
         
@@ -181,7 +181,7 @@ void __declspec(naked) __stdcall GetEntityName(int table_idx, int entity_idx, ch
         pop eax
 
         //call the game function
-        call GetEntityName
+        call oGetEntityName
 
         //pop the two values off stack
         pop eax
@@ -215,6 +215,17 @@ void* oPrintChat;// = 0x4190e3;
 const char* printChatPattern = "\xB8\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x81\xEC\x00\x00\x00\x00\x83\x3D\x94\xA7\x04\x01";
 const char* printChatMask = "x????x????xx????xxxxxx";
 //"B8 ? ? ? ? E8 ? ? ? ? 81 EC ? ? ? ? 83 3D 94 A7 04 01"
+
+
+
+//Send command function
+//Commands prefixed with & (not /)
+typedef void(__cdecl* _SendCommand)(const char* cmdBuffer);
+_SendCommand SendCommand;// = (_GetEntityPointer)0x43589f;
+//Address of signature = game.dll + 0x0002BC08 0x42bc08
+const char* sendCmdPattern = "\x83\x3D\x00\x82\x99\x00\x00\x0F\x85\x00\x00\x00\x00\x56";
+const char* sendCmdMask = "xxxxxx?xx????x";
+//"83 3D 00 82 99 00 ? 0F 85 ? ? ? ? 56"
 
 
 //Sanity checker before calling GetEntityPointer

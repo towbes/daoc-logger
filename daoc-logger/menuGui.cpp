@@ -317,6 +317,24 @@ void DrawGui() {
             ImGui::TreePop();
         }
 
+        if (ImGui::TreeNode("SendCommand"))
+        {
+            static int sendCmdClicked = 0;
+            static char cmdBuffer[512] = "";
+            ImGui::InputText("##cmdBuffer", cmdBuffer, IM_ARRAYSIZE(cmdBuffer));
+            ImGui::SameLine();
+            if (ImGui::Button("Send Command"))
+                sendCmdClicked++;
+            ImGui::Text("Note: prefix command with '&' ie: (&say hi)");
+            if (sendCmdClicked & 1)
+            {
+
+                SendCommand(cmdBuffer);
+                sendCmdClicked++;
+            }
+            ImGui::TreePop();
+        }
+
         //if (ImGui::TreeNode("Chat"))
         //{
         //    memcpy(lastChatBuf
@@ -354,9 +372,6 @@ void GameLoops() {
         p_filterItems();
     }
 }
-
-bool blockCommand = false;
-DWORD cmdType = 0;
 
 //True will block the command, false will pass it through
 bool ProcessCmd(const char* command, int* cmdType) {
@@ -552,6 +567,8 @@ void LoadHooks() {
     oCmdHandler = (void*)(ScanModIn((char*)cmdHandlerPattern, (char*)cmdHandlerMask, "game.dll"));
 
     oPrintChat = (void*)(ScanModIn((char*)printChatPattern, (char*)printChatMask, "game.dll"));
+
+    SendCommand = (_SendCommand)(ScanModIn((char*)sendCmdPattern, (char*)sendCmdMask, "game.dll"));
 
     //Cmd handler hook
     DetourTransactionBegin();
