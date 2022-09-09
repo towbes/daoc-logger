@@ -304,6 +304,20 @@ void DrawGui() {
                 sellInvClicked++;
             }
 
+            static int interactClicked = 0;
+            static char intObjid[10] = "";
+            ImGui::Text("InteractRequest: ");
+            ImGui::SameLine();
+            ImGui::InputText("##aggronum", intObjid, IM_ARRAYSIZE(intObjid));
+            ImGui::SameLine();
+            if (ImGui::Button("Interact"))
+                interactClicked++;
+            if (interactClicked & 1)
+            {
+                InteractRequest(atoi(intObjid));
+                interactClicked++;
+            }
+
             //look through all slots
             for (int slotNum = 40; slotNum < 80; slotNum++) {
                 size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
@@ -462,6 +476,8 @@ void LoadHooks() {
     oPrintChat = (void*)(ScanModIn((char*)printChatPattern, (char*)printChatMask, "game.dll"));
 
     ptrChatiMode = 0x10498D8;
+
+    InteractRequest = (_InteractRequest)(ScanModIn((char*)funcObjIntReqPattern, (char*)funcObjIntReqMask, "game.dll"));
 
     //Cmd handler hook
     DetourTransactionBegin();

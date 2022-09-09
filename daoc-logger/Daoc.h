@@ -516,7 +516,6 @@ struct send_packet {
 std::queue<std::shared_ptr<send_packet>> sendQueue;
 
 
-
 //Send hook variables
 //size_t sendFuncOffset = 0x281DF;
 int sendHookLen = 8;
@@ -604,6 +603,14 @@ _PetWindow PetWindow;
 const char* funcPetWindowPattern = "\x55\x8B\xEC\x51\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x8A\x45\x00\x88\x45\x00\x8A\x45\x00\x88\x45\x00\x8A\x45";
 const char* funcPetWindowMask = "xxxxxxxxxx?x?xx?xx?xx?xx?xx";
 //"55 8B EC 51 83 3D 00 82 99 00 ? 75 ? 8A 45 ? 88 45 ? 8A 45 ? 88 45 ? 8A 45"
+
+//Object interact request
+typedef void(__cdecl* _InteractRequest)(int objId);
+_InteractRequest InteractRequest;
+//Address of signature = game.dll + 0x0002AE06 0x42ae06
+const char* funcObjIntReqPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x28\x98\x04\x01\x00\x7E\x00\x68\x00\x00\x00\x00\x68\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x59\x59\xC9\xC3\x83\x3D\x00\x82\x99\x00\x00\x75\x00\x56";
+const char* funcObjIntReqMask = "xxxxx?xxxxxx?x?x????x????x????xxxxxxxxxx?x?x";
+//"55 8B EC 83 EC ? 83 3D 28 98 04 01 ? 7E ? 68 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 59 59 C9 C3 83 3D 00 82 99 00 ? 75 ? 56"
 
 
 //Packet item filter
