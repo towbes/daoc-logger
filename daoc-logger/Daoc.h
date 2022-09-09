@@ -503,8 +503,9 @@ struct partymemberinfo_t {
 partymemberinfo_t partyMembers[8];
 
 
-typedef void(__cdecl* _SendPacket)(char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
-_SendPacket Send;// = (_SendPacket)0x4281df;
+typedef int(__cdecl* _SendPacket)(const char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
+_SendPacket oSendPacket;
+//_SendPacket Send;// = (_SendPacket)0x4281df;
 
 struct send_packet {
     std::vector<char> packetBuffer;
@@ -513,8 +514,43 @@ struct send_packet {
     DWORD unknown;
 };
 
+char* newBuff;
+char bufferToSend[533];
 std::queue<std::shared_ptr<send_packet>> sendQueue;
+char const hex_chars[16] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
+//Commands prefixed with & (not /)
+int __cdecl SendHook(const char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown) {
+    //std::vector<char> byteArray(packetBuffer, packetBuffer + packetLen);
+    //std::string_view strBytes(byteArray.data(), byteArray.size());
+    //
+    //
+    if (packetHeader != 0xA9 && packetHeader != 0xA3) {
+        std::vector<char> logText;
+        for (DWORD i = 0; i <= packetLen; ++i) {
+            logText.push_back(hex_chars[((packetBuffer)[i] & 0xF0) >> 4]);
+            logText.push_back(hex_chars[((packetBuffer)[i] & 0x0F) >> 0]);
+            logText.push_back(' ');
+        }
+        logText.push_back('\0');
+        ::OutputDebugStringA(std::format("{:X} {} len: {}", packetHeader, &logText[0], packetLen).c_str());
+        //::OutputDebugStringA(std::format("{} len: {}", &logText[0], packetLen).c_str());
+    }
 
+
+    return oSendPacket(packetBuffer, packetHeader, packetLen, unknown);
+}
+
+std::vector<char> HexToBytes(const std::string& hex) {
+    std::vector<char> bytes;
+
+    for (unsigned int i = 0; i < hex.length(); i += 2) {
+        std::string byteString = hex.substr(i, 2);
+        char byte = (char)strtol(byteString.c_str(), NULL, 16);
+        bytes.push_back(byte);
+    }
+
+    return bytes;
+}
 
 //Send hook variables
 //size_t sendFuncOffset = 0x281DF;
@@ -624,39 +660,6 @@ int m_readItemId(int slotNum);
 //Memory based clean inventory
 void m_cleanInventory();
 
-//Send Hook
-DWORD jmpBackAddrSend;
-void __declspec(naked) sendHookFunc() {
-    __asm {
-        pushad
-        //adds 32 bytes to the stack addresses
-        mov eax, [esp + 0x24]
-        mov sentBuffPtr, eax
-        mov eax, [esp + 0x28]
-        mov packetHeader, eax
-        mov eax, [esp + 0x2C]
-        mov sentLen, eax
-        mov eax, [esp + 0x30]
-        mov packetUnknown, eax
-    }
-
-    sentBuffer = (char*)sentBuffPtr;
-
-    if (logSentHook) {
-        //printSendBufferToLog();
-    }
-    __asm {
-        popad
-        //instructions we overwrote
-        //55
-        push ebp
-        //8B EC
-        mov ebp, esp
-        //B8 20 11 00 00 
-        mov eax, 0x1120
-        jmp[jmpBackAddrSend]
-    }
-}
 
 //Receive Hook
 //https://docs.microsoft.com/en-us/cpp/assembler/inline/emit-pseudoinstruction?view=msvc-170

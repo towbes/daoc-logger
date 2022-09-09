@@ -351,6 +351,48 @@ void DrawGui() {
             ImGui::TreePop();
         }
 
+        if (ImGui::TreeNode("Packets"))
+        {
+            static int sendPktClicked = 0;
+            static char cmdBuffer[512] = "";
+            ImGui::InputText("##cmdBuffer", cmdBuffer, IM_ARRAYSIZE(cmdBuffer));
+            ImGui::SameLine();
+            if (ImGui::Button("Send Command"))
+                sendPktClicked++;
+            if (sendPktClicked & 1)
+            {
+                char* sendBuff = cmdBuffer;
+                size_t len = strlen(cmdBuffer);
+
+                std::string hexStr = std::string(cmdBuffer);
+                
+                hexStr.erase(remove_if(hexStr.begin(), hexStr.end(), isspace), hexStr.end());
+
+                std::vector<char> test = HexToBytes(hexStr);
+
+                char header = test.at(0);
+
+                test.erase(test.begin());
+
+                std::vector<char> logText;
+                for (DWORD i = 0; i < (test.size()); ++i) {
+                    logText.push_back(hex_chars[((&test[0])[i] & 0xF0) >> 4]);
+                    logText.push_back(hex_chars[((&test[0])[i] & 0x0F) >> 0]);
+                    logText.push_back(' ');
+                }
+                logText.push_back('\0');
+
+                ::OutputDebugStringA(std::format("{:X} {}, len: {}", (DWORD)header, &logText[0], test.size() - 1).c_str());
+                //::OutputDebugStringA(std::format("{}, len: {}", &logText[0], test.size() - 1).c_str());
+                
+                //DWORD header = atoi(&test.at(0));
+                //newBuff++;
+                SendHook(&test[0], (DWORD)header, test.size() - 1, 0);
+                sendPktClicked++;
+            }
+            ImGui::TreePop();
+        }
+
         //if (ImGui::TreeNode("Chat"))
         //{
         //    memcpy(lastChatBuf
@@ -382,6 +424,9 @@ void DrawGui() {
     ImGui::Render();
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 }
+
+
+
 
 void GameLoops() {
     if (useItemFilter) {
@@ -479,6 +524,9 @@ void LoadHooks() {
 
     InteractRequest = (_InteractRequest)(ScanModIn((char*)funcObjIntReqPattern, (char*)funcObjIntReqMask, "game.dll"));
 
+    //Send hook
+    oSendPacket = (_SendPacket)(ScanModIn((char*)internalSendPattern, (char*)internalSendMask, "game.dll"));
+
     //Cmd handler hook
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
@@ -493,6 +541,16 @@ void LoadHooks() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
     DetourAttach(&(PVOID&)oPrintChat, printChat);
+    result = DetourTransactionCommit();
+    if (result != NO_ERROR)
+    {
+
+    }
+
+    //Send hook
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourAttach(&(PVOID&)oSendPacket, SendHook);
     result = DetourTransactionCommit();
     if (result != NO_ERROR)
     {
@@ -521,4 +579,14 @@ void UnloadHooks() {
     {
 
     }
+    //Send hook
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourDetach(&(PVOID&)oSendPacket, SendHook);
+    result = DetourTransactionCommit();
+    if (result != NO_ERROR)
+    {
+
+    }
+
 }
