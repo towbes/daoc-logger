@@ -46,14 +46,24 @@ int plyr_pow;
 int plyr_endu;
 
 struct useSpell_t {
-    char name[32];
-    char unknown[60];
+    char name[64];
+    short spellLevel;
+    char unknown[26];
+};
+//array start address is 161d9f0
+//6968 bytes total = 0x1B38
+struct spellCategory_t {
+    char categoryName[64];
+    useSpell_t spellArray[75];
+    int alignBuf;
 };
 
-typedef void(__cdecl* _UseSpell)(int spellSlot, int canCastSpell);
+// 0x161d9f0 + (0x1b38)
+// it's 0x1b38 * the number of spell categories in spell window
+typedef void(__cdecl* _UseSpell)(int spellCategory, int spellLevel);
 _UseSpell UseSpell;
 
-//Address of signature = game.dll + 0x0002B4B8
+//Address of signature = game.dll + 0x0002B4B8 - 0x42b4b8
 const char* funcUseSpellPattern = "\x55\x8B\xEC\x83\xEC\x00\x83\x3D\x00\x82\x99\x00\x00\x0F\x85\x00\x00\x00\x00\xD9\x05\x00\x00\x00\x00\x57\x6A\x00\x33\xC0\x59\x8D\x7D\x00\xF3\x00\x8B\x0D\x00\x00\x00\x00\x5F\xD9\x41\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\x80\x4D\xFB\x00\x53\x33\xDB\x38\x59\x00\x56\x74\x00\xD9\x05\x00\x00\x00\x00\xD9\x41\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x3B\xC3\x75\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\x80\x4D\xFB\x00\xD9\x05\x00\x00\x00\x00\xD9\x05\x00\x00\x00\x00\xDA\xE9\xDF\xE0\xF6\xC4\x00\x7B\x00\xE8\x00\x00\x00\x00\x84\xC0\x74\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x53\xE8\x00\x00\x00\x00\x84\xC0\x59\x74\x00\x80\x4D\xFB\x00\xA1\x00\x00\x00\x00\x00\x00\x00\x00\x66\x89\x00\x00\x8B\x08\x89\x4D\x00\x8B\x48\x00\x89\x4D\x00\x8B\x48\x00\x8B\x40\x00\x89\x45\x00\x8A\x45\x00\x88\x45\x00\x8A\x45\x00\x8D\x75\x00\x89\x4D\x00\x88\x45\x00\xE8\x00\x00\x00\x00\x53\x6A\x00\x8B\xC6\x6A\x00\x50\xE8\x00\x00\x00\x00\x83\xC4\x00\x5E\x5B\xC9\xC3\x55\x8B\xEC\x83\xEC";
 const char* funcUseSpellMask = "xxxxx?xxxxxx?xx????xx????xx?xxxxx?x?xx????xxx?xxxxxx?x?xxx?xxxxx?xx?xx????xx?xxxxxx?x?xxx?x????????xx????xxxx?x????????xxx?xxx?x????????xx????xxxx?xxx?xx????xx????xxxxxx?x?x????xxx?xxx?x????????xx????xxxx?xxx?x????????xx??xxxx?xx?xx?xx?xx?xx?xx?xx?xx?xx?xx?xx?x????xx?xxx?xx????xx?xxxxxxxxx";
 
@@ -64,16 +74,20 @@ const char* plyrUseSpellTableMask = "xx?????xx??xx";
 void* plyrUseSpellTableTemp;
 DWORD plyrUseSpellTableLoc;
 unsigned char* plyrUseSpellTablePtr;
-useSpell_t plyrUseSpellTable[150];
+//useSpell_t plyrUseSpellTable[150];
+
+//category starts at 1
+spellCategory_t plyrSpellCategories[8];
+
 int puspCount;
 
 void DumpSpells() {
     plyrUseSpellTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSpellTableLoc));
-    //first spell is 64bytes behind
-    plyrUseSpellTablePtr -= 0x40;
-    for (puspCount = 0; puspCount < 150; puspCount++) {
-        plyrUseSpellTable[puspCount] = *(useSpell_t*)(plyrUseSpellTablePtr);
-        plyrUseSpellTablePtr += sizeof(useSpell_t);
+    //first spell is 64bytes behind, category array starts 64bytes behind that
+    plyrUseSpellTablePtr -= 0x80;
+    for (puspCount = 0; puspCount < 8; puspCount++) {
+        plyrSpellCategories[puspCount] = *(spellCategory_t*)(plyrUseSpellTablePtr);
+        plyrUseSpellTablePtr += sizeof(spellCategory_t);
     }
 }
 
@@ -290,7 +304,7 @@ __declspec(naked) void __stdcall wrapCmdHandler() {
     // Prepare the modifiable command buffer..
     //_asm pushad;
     //_asm pushfd;
-    //::strcpy_s(p_cmd, c_cmd);
+    //::strcpy_s(mCmd, c_cmd);
     //_asm popfd;
     //_asm popad;
 
@@ -504,9 +518,11 @@ struct partymemberinfo_t {
 partymemberinfo_t partyMembers[8];
 
 
+
+//_SendPacket Send;// = (_SendPacket)0x4281df;
 typedef int(__cdecl* _SendPacket)(const char* packetBuffer, DWORD packetHeader, DWORD packetLen, DWORD unknown);
 _SendPacket oSendPacket;
-//_SendPacket Send;// = (_SendPacket)0x4281df;
+
 
 struct send_packet {
     std::vector<char> packetBuffer;

@@ -188,16 +188,16 @@ void DrawGui() {
             ImGui::SameLine();
             static int useSpellClicked = 0;
             static char spellnum[10] = "";
+            static char spellcat[10] = "";
             if (ImGui::Button("Use Spell"))
                 useSpellClicked++;
             if (useSpellClicked & 1)
             {
 
-                UseSpell(atoi(spellnum), 1);
+                UseSpell(atoi(spellcat), atoi(spellnum));
                 useSpellClicked++;
             }
-            ImGui::SameLine();
-
+            ImGui::InputText("##spellcat", spellcat, IM_ARRAYSIZE(spellcat));
             ImGui::InputText("##spellnum", spellnum, IM_ARRAYSIZE(spellnum));
             // Child 1: no border, enable horizontal scrollbar
             {
@@ -207,11 +207,15 @@ void DrawGui() {
                 if (disable_mouse_wheel)
                     window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
                 ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), false, window_flags);
-                for (int i = 0; i < 150; i++) {
-                    if (plyrUseSpellTable[i].name[0] != '\0') {
-                        ImGui::Text("Spell %d: %s", i, plyrUseSpellTable[i].name);
+                for (int cat = 0; cat < 8; cat++) {
+                    for (int i = 0; i < 75; i++) {
+
+                        if (plyrSpellCategories[cat].spellArray[i].name[0] != '\0') {
+                            ImGui::Text("Spell level,cat %d,%d: %s", cat, plyrSpellCategories[cat].spellArray[i].spellLevel, plyrSpellCategories[cat].spellArray[i].name);
+                        }
                     }
                 }
+
 
                 ImGui::EndChild();
             }
@@ -411,8 +415,7 @@ void DrawGui() {
                 sendPktClicked++;
             if (sendPktClicked & 1)
             {
-                char* sendBuff = cmdBuffer;
-                size_t len = strlen(cmdBuffer);
+
 
                 std::string hexStr = std::string(cmdBuffer);
 
