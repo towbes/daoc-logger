@@ -444,7 +444,7 @@ int findEntityByName(char* name) {
         if (EntityPtrSanityCheck(i)) {
             std::string temp1 = name;
             std::string temp2 = entNameList[i].name;
-            if (temp1 == temp2) {
+            if (temp2.rfind(temp1, 0) == 0) {
                     return i;
             }
         }
@@ -466,6 +466,7 @@ bool findEntityByOffset(int offset) {
     }
     return false;
 }
+
 
 int findEntityByOid(short oid) {
     for (entbyoidCount = 0; entbyoidCount < 2000; entbyoidCount++) {
@@ -536,7 +537,6 @@ int __cdecl SendHook(const char* packetBuffer, DWORD packetHeader, DWORD packetL
         //::OutputDebugStringA(std::format("{} len: {}", &logText[0], packetLen).c_str());
     }
 
-
     return oSendPacket(packetBuffer, packetHeader, packetLen, unknown);
 }
 
@@ -587,12 +587,21 @@ BYTE autorunToggle;
 
 struct playerpos_t {
     float pos_x;
-    int heading;
-    unsigned char unknown[68];
+    short heading;
+    unsigned char unknown[20];
+    int playerSpeedFwd; //writable
+    unsigned char unknown2[12];
+    int momentumMaxFwdBack;
+    float momentumFwdBack;
+    float momentumLeftRight;
+    unsigned char unknown3[12];
+    float momentumFwdBackWrite;
+    int unknown4;
     float pos_y;
-    unsigned char unknown2[8];
+    float writeablePos_zAdd;
+    int unknown5;
     float pos_z;
-    char unknown4[16];
+    unsigned char unknown6[16];
     int rotatePlayer;
 };
 
@@ -841,6 +850,21 @@ void sell_inv() {
     }
 }
 
+int ItemSlotByName(char* name) {
+    std::string targetItem = name;
+    for (int slotNum = 40; slotNum < 80; slotNum++) {
+        unsigned char* tmpPtr = reinterpret_cast<unsigned char*>(ptrInventory);
+        size_t offset = (slotNum - 40) * sizeof(item_t); //* sizeof(item_t);
+        tmpPtr += offset;
+        item_t itemTemp = *(item_t*)tmpPtr;
+        std::string currentItem(reinterpret_cast<char*>(itemTemp.itemName));
+        //printf("Slot %u, ItemHex: %02x, ItemId - %u, ItemName - %s\n", slotNum, itemTemp.itemId, itemTemp.itemId, itemTemp.itemName);
+        if (currentItem.rfind(targetItem, 0) == 0) {
+            return slotNum;
+        }
+    }
+    return false;
+}
 
 //Chat info / functions
 

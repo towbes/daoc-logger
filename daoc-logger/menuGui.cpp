@@ -304,19 +304,6 @@ void DrawGui() {
                 sellInvClicked++;
             }
 
-            static int interactClicked = 0;
-            static char intObjid[10] = "";
-            ImGui::Text("InteractRequest: ");
-            ImGui::SameLine();
-            ImGui::InputText("##aggronum", intObjid, IM_ARRAYSIZE(intObjid));
-            ImGui::SameLine();
-            if (ImGui::Button("Interact"))
-                interactClicked++;
-            if (interactClicked & 1)
-            {
-                InteractRequest(atoi(intObjid));
-                interactClicked++;
-            }
 
             //look through all slots
             for (int slotNum = 40; slotNum < 80; slotNum++) {
@@ -389,6 +376,96 @@ void DrawGui() {
                 //newBuff++;
                 SendHook(&test[0], (DWORD)header, test.size() - 1, 0);
                 sendPktClicked++;
+            }
+            ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("BuffDemo")) {
+            static int interactClicked = 0;
+            static char intNpcName[100] = "";
+            if (ImGui::Button("Interact"))
+                interactClicked++;
+            ImGui::SameLine();
+            ImGui::InputText("##intNpcName", intNpcName, IM_ARRAYSIZE(intNpcName));
+            if (interactClicked & 1)
+            {
+                int npcEntId = findEntityByName(intNpcName);
+                if (npcEntId > 0) {
+                    unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[npcEntId]);
+                    tempPtr += 0x23c;
+                    uint16_t npcObjId = *(uint16_t*)tempPtr;
+                    //Add 1000 to account for inv slots
+                    //https://github.com/Dawn-of-Light/DOLSharp/blob/cc8c773e191a0e722b7add2e9f5b0f405414c368/GameServer/packets/Client/168/PlayerMoveItemRequestHandler.cs
+                    SetTarget(npcEntId, 0);
+                    SetTargetUI();
+                    InteractRequest((int)npcObjId);
+                }
+                interactClicked++;
+            }
+
+            static int sendPktClicked = 0;
+            static char cmdBuffer[512] = "";
+            ImGui::InputText("##cmdBuffer", cmdBuffer, IM_ARRAYSIZE(cmdBuffer));
+            ImGui::SameLine();
+            if (ImGui::Button("Send Command"))
+                sendPktClicked++;
+            if (sendPktClicked & 1)
+            {
+                char* sendBuff = cmdBuffer;
+                size_t len = strlen(cmdBuffer);
+
+                std::string hexStr = std::string(cmdBuffer);
+
+                hexStr.erase(remove_if(hexStr.begin(), hexStr.end(), isspace), hexStr.end());
+
+                std::vector<char> test = HexToBytes(hexStr);
+
+                char header = test.at(0);
+
+                test.erase(test.begin());
+
+                std::vector<char> logText;
+                for (DWORD i = 0; i < (test.size()); ++i) {
+                    logText.push_back(hex_chars[((&test[0])[i] & 0xF0) >> 4]);
+                    logText.push_back(hex_chars[((&test[0])[i] & 0x0F) >> 0]);
+                    logText.push_back(' ');
+                }
+                logText.push_back('\0');
+                //size - 1 because of the trailing \0 on the char vector
+                ::OutputDebugStringA(std::format("{:X} {}, len: {}", (DWORD)header, &logText[0], test.size() - 1).c_str());
+                //::OutputDebugStringA(std::format("{}, len: {}", &logText[0], test.size() - 1).c_str());
+
+                //DWORD header = atoi(&test.at(0));
+                //newBuff++;
+                SendHook(&test[0], (DWORD)header, test.size() - 1, 0);
+                sendPktClicked++;
+            }
+
+            static int moveItemClicked = 0;
+            static char moveToSlot[100] = "";
+            static char moveFromSlot[100] = "";
+            static char moveCount[8] = "";
+            if (ImGui::Button("MoveItem"))
+                moveItemClicked++;
+            ImGui::SameLine();
+            ImGui::InputText("##moveToSlot", moveToSlot, IM_ARRAYSIZE(moveToSlot));
+            ImGui::InputText("##moveFromSlot", moveFromSlot, IM_ARRAYSIZE(moveFromSlot));
+            ImGui::InputText("##moveCount", moveCount, IM_ARRAYSIZE(moveCount));
+            if (moveItemClicked & 1)
+            {
+                int slotNum = ItemSlotByName(moveFromSlot);
+                if (slotNum > 0) {
+                    int npcEntId = findEntityByName(moveToSlot);
+                    if (npcEntId > 0) {
+                        unsigned char* tempPtr = reinterpret_cast<unsigned char*>(EntityList[npcEntId]);
+                        tempPtr += 0x23c;
+                        uint16_t npcObjId = *(uint16_t*)tempPtr;
+                        //Add 1000 to account for inv slots
+                        //https://github.com/Dawn-of-Light/DOLSharp/blob/cc8c773e191a0e722b7add2e9f5b0f405414c368/GameServer/packets/Client/168/PlayerMoveItemRequestHandler.cs
+                        MoveItem((int)(npcObjId + 1000), slotNum, atoi(moveCount));
+                    }
+                }
+                moveItemClicked++;
             }
             ImGui::TreePop();
         }
