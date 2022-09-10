@@ -381,7 +381,7 @@ void DrawGui() {
                     logText.push_back(' ');
                 }
                 logText.push_back('\0');
-
+                //size - 1 because of the trailing \0 on the char vector
                 ::OutputDebugStringA(std::format("{:X} {}, len: {}", (DWORD)header, &logText[0], test.size() - 1).c_str());
                 //::OutputDebugStringA(std::format("{}, len: {}", &logText[0], test.size() - 1).c_str());
                 

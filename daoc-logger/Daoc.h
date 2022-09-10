@@ -557,42 +557,12 @@ std::vector<char> HexToBytes(const std::string& hex) {
 int sendHookLen = 8;
 const char* internalSendPattern = "\x55\x8B\xEC\xB8\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x83\x3D\x00\x82\x99\x00\x00\x0F\x85";
 const char* internalSendMask = "xxxx????x????xxxxxx?xx";
-//Used for pointer to send buffer
-uintptr_t sentBuffPtr;
-//Variables for storing logged packets
-DWORD sentLen;
-DWORD packetHeader;
-DWORD packetUnknown;
-char* sentBuffer;
-//Flag for actions to take on packets
-bool logSentHook = false;
-//Function in dllmain
-void printSendBufferToLog();
-
-//Receive hook variables
-//size_t recvFuncOffset = 0x27F5E;
-int recvHookLen = 8;
-const char* internalRecvPattern = "\x59\x59\x66\x00\x00\x00\x00\x00\x00\x00\x00\x00\x9E";
-const char* internalRecvMask = "xxx?????????x";
-DWORD recvLen;
-unsigned char* recvBuffer;
-//Used for pointer to the recv buffer
-uintptr_t receiveBuffer;
-//Flags for actions to take on packets
-bool logRecvHook = false;
-//Function in dllmain
-void printRecvBufferToLog();
 
 
-//Hook right after run speed function, replace EAX with desired run speed
-//func loc is 438db7 on 7/4/2022
-//Player position pointer is at [ebx - 0x2C] from this instruction
-int runSpeedHookLen = 8;
-const char* runSpeedPattern = "\x8B\xD0\x89\x55\x00\xDB\x45\x00\x59\x59\x8B\x0D\x00\x00\x00\x00\xD8\x51\x00\xDF\xE0\xF6\xC4\x00\x7A";
-const char* runSpeedMask = "xxxx?xx?xxxx????xx?xxxx?x";
+//New recv hook
+// incoming packet handler 0x41052a
 
-DWORD newRunspeed = 0xEE;
-bool changeRunSpeed = false;
+
 
 //Player position struct pointer
 //Address of signature = game.dll + 0x000418CD , address at +0x2 offset
@@ -660,73 +630,7 @@ int m_readItemId(int slotNum);
 //Memory based clean inventory
 void m_cleanInventory();
 
-
-//Receive Hook
-//https://docs.microsoft.com/en-us/cpp/assembler/inline/emit-pseudoinstruction?view=msvc-170
-#define mv_ax __asm _emit 0x66 __asm _emit 0xA1 __asm _emit 0xB8 __asm _emit 0x77 __asm _emit 0x04 __asm _emit 0x01
-DWORD jmpBackAddrRecv;
-void __declspec(naked) recvHookFunc() {
-    __asm {
-        pushad
-        mov recvLen, ebx
-        //mov recvBuffer, ebx
-    }
-
-    receiveBuffer = moduleBase + 0xC477BA; // we probably need to read this value from the stack
-    recvBuffer = (unsigned char*)receiveBuffer;
-
-    if (logRecvHook) {
-        //printRecvBufferToLog();
-    }
-    if (filterItemFlag) {
-        p_filterItems();
-    }
-    __asm {
-        popad
-        pop ecx
-        pop ecx
-        mv_ax
-        jmp[jmpBackAddrRecv]
-    }
-}
-
-
-//Run speed hook function
-//assigns new run speed to eax register
-DWORD jmpBackAddrRunSpeed;
-void __declspec(naked) runSpeedHookFunc() {
-    __asm {
-        pushad
-    }
-
-
-    if (changeRunSpeed) {
-        //new runspeed is set in dllmain.cpp
-        __asm {
-            popad
-            //move run speed into eax
-            mov eax, newRunspeed
-            //instructions we overwrote
-            mov edx, eax
-            mov[ebp - 0x10], edx
-            fild dword ptr[ebp - 0x10]
-            jmp[jmpBackAddrRunSpeed]
-        }
-    }
-    else {
-        __asm {
-            popad
-            //instructions we overwrote
-            mov edx, eax
-            mov[ebp - 0x10], edx
-            fild dword ptr[ebp - 0x10]
-            jmp[jmpBackAddrRunSpeed]
-        }
-    }
-}
-
-//Set target func
-
+//Set target fun
 typedef void(__cdecl* _SetTarget)(int entIdx, bool hasTarget);
 _SetTarget SetTarget;// = (_SetTarget)0x42b2e3;
 
