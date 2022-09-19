@@ -33,9 +33,6 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mem.cpp">
-      <Filter>mem</Filter>
-    </ClCompile>
     <ClCompile Include="gh_d3d9.cpp">
       <Filter>d3d9</Filter>
     </ClCompile>
@@ -71,9 +68,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Hook.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Scan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -85,9 +79,6 @@
     </ClInclude>
     <ClInclude Include="PacketProcessor.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mem.h">
-      <Filter>mem</Filter>
     </ClInclude>
     <ClInclude Include="gh_d3d9.h">
       <Filter>d3d9</Filter>

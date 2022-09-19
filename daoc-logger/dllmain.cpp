@@ -1,11 +1,6 @@
 #include "stdafx.h"
-
-#include "Hook.h"
-
 #include "PacketProcessor.h"
-#include "mem.h"
 #include "gh_d3d9.h"
-
 #include "menuGui.h"
 
 
@@ -176,7 +171,7 @@ DWORD WINAPI Init(HMODULE hModule)
 
 
     while (true) {
-        if (GetAsyncKeyState(VK_RCONTROL) & 1) {
+        if (GetAsyncKeyState(VK_END) & 1) {
             break;
         }
         //Sleep to prevent crushing the CPU

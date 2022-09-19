@@ -16,6 +16,23 @@ wchar_t moduleName[] = L"game.dll";
 uintptr_t moduleBase;
 
 
+//uint32_t = [game.dll + 0xC4A7F0] + 0x64 = Local Player Entity Index
+////Player ent index is at +0x64 from address in ptrPlayerEntIndex
+uintptr_t ptrPlayerEntIndex; // 0x104a7f0
+//Pattern
+//Address of signature = game.dll + 0x00041880 0x441880 @ +0x2
+const char* ptrPlayerEntIndexPattern = "\x89\x3D\x00\x00\x00\x00\xB9";
+const char* ptrPlayerEntIndexMask = "xx????x";
+//"89 3D ? ? ? ? B9"
+
+//Ptr to players pet entity index
+//#define ptrPetEntIndex_x	0x10498d0
+
+enum EntStates {
+    petAutoAtk = 4,
+    idle = 8,
+    petStyle = 69,
+};
 
 typedef void(__cdecl* _SellRequest)(int slotNum);
 _SellRequest SellRequest;// = (_SellRequest)0x42b2e3;
@@ -48,9 +65,15 @@ int plyr_endu;
 struct useSpell_t {
     char name[64];
     short spellLevel;
-    char unknown[26];
+    short unknown1;
+    int tickCount;
+    int unknown2;
+    int unknown3;
+    int unknown4;
+    int unknown5;
+    int unknown6;
 };
-//array start address is 161d9f0
+//array start address is 0x161d9f0
 //6968 bytes total = 0x1B38
 struct spellCategory_t {
     char categoryName[64];
@@ -127,8 +150,11 @@ void DumpBuffs() {
 
 //Skills
 struct useSkill_t {
-    unsigned char name[72];
+    unsigned char name[64];
     int unknown1;
+    int unknown2;
+    //This is the tickcount that spell can be used again
+    int tickCount;
 };
 
 buff_t plyrSkillTable[150];

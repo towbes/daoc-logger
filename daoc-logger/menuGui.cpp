@@ -153,10 +153,10 @@ void DrawGui() {
                 useSkillClicked++;
             }
             ImGui::SameLine();
-            
+            DumpSkills();
             ImGui::InputText("##skillnum", skillnum, IM_ARRAYSIZE(skillnum));
             // Child 1: no border, enable horizontal scrollbar
-            {
+            {   ImGui::Text("Current tick: %d", GetTickCount());
                 ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                 static bool disable_mouse_wheel = false;
                 ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
@@ -165,7 +165,7 @@ void DrawGui() {
                 ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), false, window_flags);
                 for (int i = 0; i < 150; i++) {
                     if (plyrUseSkillTable[i].name[0] != '\0') {
-                        ImGui::Text("Skill %d: %s", i, plyrUseSkillTable[i].name);
+                        ImGui::Text("Skill %d: %s - %d", i, plyrUseSkillTable[i].name, plyrUseSkillTable[i].tickCount);
                     }
                 }
 
