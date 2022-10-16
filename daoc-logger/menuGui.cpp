@@ -538,6 +538,10 @@ void LoadHooks() {
     plyrSkillTableLoc = (DWORD)((size_t)plyrSkillTableTemp + 0x1);
     plyrUseSkillTableTemp = (void*)(ScanModIn((char*)plyrUseSkillTablePattern, (char*)plyrUseSkillTableMask, "game.dll"));
     plyrUseSkillTableLoc = (DWORD)((size_t)plyrUseSkillTableTemp + 0x1);
+    //const char* plyrSkillTablePatternNew = "BA????803A";
+    //uintptr_t plyrUseSkillTableLoc2 = NewScanModIn("game.dll", "891D????33C05B", 2);
+        
+
 
     //UseSkill Address
     UseSkill = (_UseSkill)(ScanModIn((char*)funcUseSkillPattern, (char*)funcUseSkillMask, "game.dll"));

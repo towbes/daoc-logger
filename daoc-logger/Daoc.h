@@ -1,3 +1,21 @@
+/*
+daoc-logger - Copyright (c) 2022 towbes
+Contact: discord afkgamer#0162
+Contact: https://github.com/towbes
+
+This program is free software : you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.If not, see < https://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 #include <set>
 #include <queue>
@@ -15,6 +33,18 @@ wchar_t moduleName[] = L"game.dll";
 //Module base address
 uintptr_t moduleBase;
 
+//The pointer scans probably need to use ?? for each byte of the wildcards but below are using just single ?
+
+//D3D9 pointers
+//pointer1 will point to the vtable for IDirect3D9* and pointer2 to IDirect3DDevice9*
+//const auto pointer1 = daochook::pointers::instance().add("d3d9", "d3d9.dll", "C703????????89432C418983", 0, 0);
+//const auto pointer2 = daochook::pointers::instance().add("d3d9_device", "d3d9.dll", "C706????????8986????????8986", 0, 0);
+
+//pointer mouse or key pressed
+//Address of signature = game.dll + 0x00043FB0   0x104a744
+//"\x89\x35\x00\x00\x00\x00\x5F\x5E\x5B\xC9\xC3\x8B\xFF\xF0\x3D", "xx????xxxxxxxxx"
+//"89 35 ? ? ? ? 5F 5E 5B C9 C3 8B FF F0 3D"
+
 
 //uint32_t = [game.dll + 0xC4A7F0] + 0x64 = Local Player Entity Index
 ////Player ent index is at +0x64 from address in ptrPlayerEntIndex
@@ -23,7 +53,7 @@ uintptr_t ptrPlayerEntIndex; // 0x104a7f0
 //Address of signature = game.dll + 0x00041880 0x441880 @ +0x2
 const char* ptrPlayerEntIndexPattern = "\x89\x3D\x00\x00\x00\x00\xB9";
 const char* ptrPlayerEntIndexMask = "xx????x";
-//"89 3D ? ? ? ? B9"
+//const char* ptrPlayerPatternNew = "893D????B9";
 
 //Ptr to players pet entity index
 //#define ptrPetEntIndex_x	0x10498d0
@@ -104,6 +134,8 @@ spellCategory_t plyrSpellCategories[8];
 
 int puspCount;
 
+//All spells.csv are loaded into memory at 0x115A430
+
 void DumpSpells() {
     plyrUseSpellTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSpellTableLoc));
     //first spell is 64bytes behind, category array starts 64bytes behind that
@@ -162,6 +194,7 @@ useSkill_t plyrUseSkillTable[150];
 
 //Start of skill list pattern
 //Address of signature = game.dll + 0x0001EEC8
+const char* plyrSkillTablePatternNew = "BA????803A";
 //At +0x1
 const char* plyrSkillTablePattern = "\xBA\x00\x00\x00\x00\x80\x3A";
 const char* plyrSkillTableMask = "x????xx";
@@ -180,7 +213,8 @@ unsigned char* plyrUseSkillTablePtr;
 int pusCount;
 
 void DumpSkills() {
-    plyrUseSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSkillTableLoc));
+    //plyrUseSkillTablePtr = reinterpret_cast<unsigned char*>(*(int*)(plyrUseSkillTableLoc));
+    plyrUseSkillTablePtr = reinterpret_cast<unsigned char*>(plyrUseSkillTableLoc);
     for (pusCount = 0; pusCount < 150; pusCount++) {
         plyrUseSkillTable[pusCount] = *(useSkill_t*)(plyrUseSkillTablePtr);
         plyrUseSkillTablePtr += sizeof(useSkill_t);
